@@ -14,6 +14,7 @@ SkyboxLoader.addSkyboxBackground(scene, DayTheme.LIGHT_SKYBOX_PATH); // Load sky
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // Mouse Control Initialization
@@ -27,9 +28,13 @@ let dragOffset = new THREE.Vector3();
 const geometry = new THREE.BoxGeometry(7, 12, 0.5);
 const material = new THREE.MeshStandardMaterial({ color: 0x0000FF });
 // platform
-const v_base = new THREE.Mesh(geometry, material);
 
-scene.add(v_base);
+const base = new THREE.Mesh(geometry, material);
+base.position.copy(groundBody.position);
+base.quaternion.copy(groundBody.quaternion);
+base.castShadow = true; // Cast shadows
+base.receiveShadow = true; // Receive shadows
+scene.add(base);
 
 // right barrier
 const border_height = 0.4; // How tall the box is
@@ -79,6 +84,8 @@ const ballMesh = new THREE.Mesh(
   new THREE.SphereGeometry(ballRadius, 8, 8),
   new THREE.MeshStandardMaterial({ color: 0x00ff00 })
 );
+ballMesh.castShadow = true; // Cast shadows
+ballMesh.receiveShadow = true; // Receive shadows
 scene.add(ballMesh);
 
 const player_controller = new THREE.Mesh(
@@ -86,6 +93,8 @@ const player_controller = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
 );
 
+player_controller.castShadow = true; // Cast shadows
+player_controller.receiveShadow = true; // Receive shadows
 scene.add(player_controller);
 
 player_controller.position.set(0, - v_base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2 + player_controller.geometry.parameters.height + 0.1, v_base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
@@ -281,8 +290,8 @@ function animate() {
   player_controller.position.copy(playerControllerBody.position);
   player_controller.quaternion.copy(playerControllerBody.quaternion);
 
-  cannonDebugger.update(); 
-  
+  //cannonDebugger.update(); 
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
 }
