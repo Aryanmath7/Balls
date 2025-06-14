@@ -24,25 +24,41 @@ export function loadPlatform(scene, width = 7, height = 0.5, depth = 12, borderW
     v_left_barrier.receiveShadow = true; // Receive shadows
 
     // player_barrier
-    const player_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width, borderWidth, borderHeight)
-    v_base.add(player_barrier); // Glue box to rectangle
-    player_barrier.position.set(0, - v_base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
-    player_barrier.castShadow = true; // Cast shadows
-    player_barrier.receiveShadow = true; // Receive shadows
+    const left_player_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
+    v_base.add(left_player_barrier); // Glue box to rectangle
+    left_player_barrier.position.set(v_left_barrier.position.x + left_player_barrier.geometry.parameters.width / 2, - v_base.geometry.parameters.height / 2 + left_player_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + left_player_barrier.geometry.parameters.depth / 2);
+    left_player_barrier.castShadow = true; // Cast shadows
+    left_player_barrier.receiveShadow = true; // Receive shadows
 
     // opponent_barrier
-    const opponent_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width, borderWidth, borderHeight)
-    v_base.add(opponent_barrier); // Glue box to rectangle
-    opponent_barrier.position.set(0, v_base.geometry.parameters.height / 2 - opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2);
-    opponent_barrier.castShadow = true; // Cast shadows
-    opponent_barrier.receiveShadow = true; // Receive shadows
+    const left_opponent_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
+    v_base.add(left_opponent_barrier); // Glue box to rectangle
+    left_opponent_barrier.position.set(v_left_barrier.position.x + left_opponent_barrier.geometry.parameters.width / 2, v_base.geometry.parameters.height / 2 - left_opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + left_opponent_barrier.geometry.parameters.depth / 2);
+    left_opponent_barrier.castShadow = true; // Cast shadows
+    left_opponent_barrier.receiveShadow = true; // Receive shadows
+
+    // player_barrier
+    const right_player_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
+    v_base.add(right_player_barrier); // Glue box to rectangle
+    right_player_barrier.position.set(v_right_barrier.position.x - right_player_barrier.geometry.parameters.width / 2, - v_base.geometry.parameters.height / 2 + right_player_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + right_player_barrier.geometry.parameters.depth / 2);
+    right_player_barrier.castShadow = true; // Cast shadows
+    right_player_barrier.receiveShadow = true; // Receive shadows
+
+    // opponent_barrier
+    const right_opponent_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
+    v_base.add(right_opponent_barrier); // Glue box to rectangle
+    right_opponent_barrier.position.set(v_right_barrier.position.x - right_opponent_barrier.geometry.parameters.width / 2, v_base.geometry.parameters.height / 2 - right_opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + right_opponent_barrier.geometry.parameters.depth / 2);
+    right_opponent_barrier.castShadow = true; // Cast shadows
+    right_opponent_barrier.receiveShadow = true; // Receive shadows
 
     return {
         base: v_base,
         rightBarrier: v_right_barrier,
         leftBarrier: v_left_barrier,
-        playerBarrier: player_barrier,
-        opponentBarrier: opponent_barrier
+        leftPlayerBarrier: left_player_barrier,
+        leftOpponentBarrier: left_opponent_barrier,
+        rightPlayerBarrier: right_player_barrier,
+        rightOpponentBarrier: right_opponent_barrier
     };
 }
 
