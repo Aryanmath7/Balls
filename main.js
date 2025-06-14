@@ -98,6 +98,16 @@ const ballMesh = new THREE.Mesh(
 );
 scene.add(ballMesh);
 
+const player_controller = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 0.5),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+
+scene.add(player_controller);
+
+base.add(player_controller); // Glue box to rectangle
+player_controller.position.set(0, - base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2 + player_controller.geometry.parameters.height + 0.1, base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
+
 //Initialize lights
 Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, DayTheme.LIGHT_DIRECTION);
 Lighting.initAmbientLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY);
@@ -137,7 +147,6 @@ const rightBarrierBody = new CANNON.Body({
 rightBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
 world.addBody(rightBarrierBody);
 
-
 const playerBarrierShape = new CANNON.Box(new CANNON.Vec3(player_barrier.geometry.parameters.width / 2, player_barrier.geometry.parameters.height / 2, player_barrier.geometry.parameters.depth / 2));
 const playerBarrierBody = new CANNON.Body({
   shape: playerBarrierShape,
@@ -145,11 +154,24 @@ const playerBarrierBody = new CANNON.Body({
   position: new CANNON.Vec3(
     0,
     base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2,
-    0
+    base.geometry.parameters.height / 2 - player_barrier.geometry.parameters.height / 2
   ),
 });
 playerBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
 world.addBody(playerBarrierBody);
+
+const opponentBarrierShape = new CANNON.Box(new CANNON.Vec3(opponent_barrier.geometry.parameters.width / 2, opponent_barrier.geometry.parameters.height / 2, opponent_barrier.geometry.parameters.depth / 2));
+const opponentBarrierBody = new CANNON.Body({
+  shape: opponentBarrierShape,
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(
+    0,
+    base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2,
+    -base.geometry.parameters.height / 2 + opponent_barrier.geometry.parameters.height / 2
+  ),
+});
+opponentBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+world.addBody(opponentBarrierBody);
 
 // Add contact material to enable friction
 const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
@@ -177,5 +199,5 @@ function animate() {
 }
 animate();
 setTimeout(() => {
-  ballBody.velocity.set(-5, 0, 0); // roll along +X
+  ballBody.velocity.set(-5, 0, 5);
 }, 5000);
