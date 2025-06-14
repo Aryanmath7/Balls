@@ -4,14 +4,19 @@ import CannonDebugger from 'https://esm.sh/cannon-es-debugger';
 
 import * as Lighting from './Lighting/lighting_helper.js';
 import * as Camera from './Camera/camera-helper.js';
+
 import * as DayTheme from './Themes/day.js';
+
 import * as SkyboxLoader from './Visuals/v_load_skybox.js';
 import * as PlatformLoader from './Visuals/v_load_platform.js';
+import * as BallLoader from './Visuals/v_load_ball.js';
+
 import * as PhysicsLoader from './Physics/p_load_platform.js'
 import * as BallPhysicsLoader from './Physics/p_load_ball.js'
 import * as BarrierPhysicsLoader from './Physics/p_load_borders.js'
 
-import * as BallLoader from './Visuals/v_load_ball.js';
+import * as Utils from './Utils/game_functions.js'
+import * as Controls from './Utils/user_inputs.js'
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -22,12 +27,6 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
-
-// Mouse Control Initialization
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-let isDragging = false;
-let dragOffset = new THREE.Vector3();
 
 // visuals
 
@@ -94,8 +93,9 @@ const pPlayerPaddle = new CANNON.Body({
 });
 
 pPlayerPaddle.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
-let targetPosition = new CANNON.Vec3();
-const delta = new CANNON.Vec3().copy(targetPosition).vsub(pPlayerPaddle.position);
+// user inputs
+let delta = Controls.initMouseControls(renderer, camera, vPlayerPaddle, pPlayerPaddle)
+
 pPlayerPaddle.velocity.set(delta.x * 10, 0, delta.z * 10);
 pPlayerPaddle.angularFactor.set(0, 0, 0); 
 pPlayerPaddle.angularVelocity.set(0, 0, 0); 
@@ -109,57 +109,6 @@ const pContactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
 });
 world.addContactMaterial(pContactMat);
 
-// user inputs
-
-renderer.domElement.addEventListener('mousedown', onMouseDown);
-renderer.domElement.addEventListener('mousemove', onMouseMove);
-renderer.domElement.addEventListener('mouseup', onMouseUp);
-
-// move player box
-function updateMouse(event) {
-  const rect = renderer.domElement.getBoundingClientRect();
-  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-}
-
-function onMouseDown(event) {
-  updateMouse(event);
-  raycaster.setFromCamera(mouse, camera);
-
-  const intersects = raycaster.intersectObject(vPlayerPaddle);
-  if (intersects.length > 0) {
-    isDragging = true;
-    dragOffset.copy(intersects[0].point).sub(vPlayerPaddle.position);
-  }
-}
-function onMouseMove(event) {
-  if (!isDragging) return;
-
-  updateMouse(event);
-  raycaster.setFromCamera(mouse, camera);
-
-  const planeY = vPlayerPaddle.position.y;
-  const platformPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
-  const intersection = new THREE.Vector3();
-
-  if (raycaster.ray.intersectPlane(platformPlane, intersection)) {
-    intersection.sub(dragOffset);
-    targetPosition.set(intersection.x, vPlayerPaddle.position.y, intersection.z);
-  }
-}
-
-function onMouseUp() {
-  isDragging = false;
-}
-
-function resetBall(pBall, vBall) {
-  pBall.position.set(0, 5, 0); // drop it from a height to fall naturally
-  pBall.velocity.set(0, 0, 0);
-  pBall.angularVelocity.set(0, 0, 0);
-  // Also update visual mesh
-  vBall.position.copy(pBall.position);
-  vBall.quaternion.copy(pBall.quaternion);
-}
 
 // Animate
 const fixedTimeStep = 1 / 60;
@@ -185,11 +134,11 @@ function animate() {
   world.step(fixedTimeStep);
   
   if (pBall.position.y < -3) {
-    resetBall(pBall, vBall)
+    Utils.resetBall(pBall, vBall)
   }
   
-  if (isDragging) {
-    const delta = new CANNON.Vec3().copy(targetPosition).vsub(pPlayerPaddle.position);
+  if (Controls.isDragging) {
+    const delta = new CANNON.Vec3().copy(Controls.targetPosition).vsub(pPlayerPaddle.position);
     pPlayerPaddle.velocity.set(delta.x * 10, 0, delta.z * 10);
   } else {
     pPlayerPaddle.velocity.set(0, 0, 0);
