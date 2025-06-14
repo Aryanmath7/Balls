@@ -1,0 +1,20 @@
+{
+  "name": "my-socket-server",
+  "version": "1.0.0",
+  "description": "Ultra-basic Node.js + Socket.IO server",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "node",
+    "socket.io",
+    "server"
+  ],
+  "author": "Aryan Mathur",
+  "license": "MIT",
+  "dependencies": {
+    "socket.io": "^4.7.5"
+  }
+}
