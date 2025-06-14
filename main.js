@@ -61,10 +61,10 @@ const groundBody = PlatformLoader.loadPhysicsPlatform(world, v_base, 10, 0.5, 15
 const platformMat = new CANNON.Material();
 const ballMat = new CANNON.Material();
 
-PlatformLoader.loadPhysicsBarrier(world, v_base, v_left_barrier);
-PlatformLoader.loadPhysicsBarrier(world, v_base, v_right_barrier);
-PlatformLoader.loadPhysicsBarrier(world, v_base, player_barrier);
-PlatformLoader.loadPhysicsBarrier(world, v_base, opponent_barrier);
+PlatformLoader.loadPhysicsBarrier(world, v_left_barrier);
+PlatformLoader.loadPhysicsBarrier(world, v_right_barrier);
+PlatformLoader.loadPhysicsBarrier(world, player_barrier);
+PlatformLoader.loadPhysicsBarrier(world, opponent_barrier);
 
 const playerControllerShape = new CANNON.Box(new CANNON.Vec3(player_controller.geometry.parameters.width / 2, player_controller.geometry.parameters.height / 2, player_controller.geometry.parameters.depth / 2));
 const playerControllerBody = new CANNON.Body({
@@ -77,7 +77,6 @@ const playerControllerBody = new CANNON.Body({
     v_base.geometry.parameters.height / 2 - player_controller.geometry.parameters.height / 2 - 0.5
   ),
 });
-
 playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(playerControllerBody);
 let targetPosition = new CANNON.Vec3();
