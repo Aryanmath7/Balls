@@ -77,6 +77,7 @@ const ballBody = new CANNON.Body({
   position: new CANNON.Vec3(0, 5, 0), // start high
   material: new CANNON.Material()
 });
+ballBody.allowSleep = false;
 world.addBody(ballBody);
 
 
@@ -143,7 +144,8 @@ world.addBody(opponentBarrierBody);
 const playerControllerShape = new CANNON.Box(new CANNON.Vec3(player_controller.geometry.parameters.width / 2, player_controller.geometry.parameters.height / 2, player_controller.geometry.parameters.depth / 2));
 const playerControllerBody = new CANNON.Body({
   shape: playerControllerShape,
-  type: CANNON.Body.STATIC,
+  mass: 5,
+  type: CANNON.Body.DYNAMIC,
   position: new CANNON.Vec3(
     0,
     v_base.geometry.parameters.depth / 2 + player_controller.geometry.parameters.depth / 2,
@@ -152,6 +154,12 @@ const playerControllerBody = new CANNON.Body({
 });
 playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(playerControllerBody);
+let targetPosition = new CANNON.Vec3();
+const delta = new CANNON.Vec3().copy(targetPosition).vsub(playerControllerBody.position);
+playerControllerBody.velocity.set(delta.x * 10, 0, delta.z * 10);
+playerControllerBody.angularFactor.set(0, 0, 0); 
+playerControllerBody.angularVelocity.set(0, 0, 0); 
+playerControllerBody.linearFactor.set(1, 0, 1); 
 
 // Add contact material to enable friction
 const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
@@ -183,27 +191,19 @@ function onMouseDown(event) {
     dragOffset.copy(intersects[0].point).sub(player_controller.position);
   }
 }
-
 function onMouseMove(event) {
   if (!isDragging) return;
 
   updateMouse(event);
   raycaster.setFromCamera(mouse, camera);
 
-  // Project onto the flat plane of the platform (Y is up)
   const planeY = player_controller.position.y;
   const platformPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
   const intersection = new THREE.Vector3();
 
   if (raycaster.ray.intersectPlane(platformPlane, intersection)) {
-    const newPos = intersection.sub(dragOffset);
-
-    // Optional: clamp movement within platform bounds
-    newPos.x = THREE.MathUtils.clamp(newPos.x, -3, 3);
-    newPos.z = THREE.MathUtils.clamp(newPos.z, -5.5, 5.5);
-
-    // Set position of Cannon body (which syncs to mesh)
-    playerControllerBody.position.set(newPos.x, player_controller.position.y, newPos.z);
+    intersection.sub(dragOffset);
+    targetPosition.set(intersection.x, player_controller.position.y, intersection.z);
   }
 }
 
@@ -219,6 +219,13 @@ function animate() {
 
   // Step the physics world
   world.step(fixedTimeStep);
+
+  if (isDragging) {
+    const delta = new CANNON.Vec3().copy(targetPosition).vsub(playerControllerBody.position);
+    playerControllerBody.velocity.set(delta.x * 10, 0, delta.z * 10);
+  } else {
+    playerControllerBody.velocity.set(0, 0, 0);
+  }
 
   // Sync ball mesh with physics body
   ballMesh.position.copy(ballBody.position);
