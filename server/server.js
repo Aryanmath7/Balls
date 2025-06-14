@@ -6,6 +6,12 @@ const HOST = '0.0.0.0';
 
 const httpServer = createServer();
 
+const playerPosition = {
+  x: 0,
+  y: 0,
+  z: 0
+};
+
 const io = new Server(httpServer, {
   cors: {
     origin: "*", // allow all origins for testing, tighten for production!
@@ -23,6 +29,19 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
   });
+
+
+  socket.on('updatePlayerPosition', (position) => {
+    console.log('Player position received:', position);
+    playerPosition.x = position.x;
+    playerPosition.y = position.y;
+    playerPosition.z = position.z;
+
+    // Broadcast the updated player position to all clients
+    io.emit('player position', playerPosition);
+  });
+
+
 });
 
 httpServer.listen(PORT, HOST, () => {

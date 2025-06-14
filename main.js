@@ -8,6 +8,7 @@ import * as DayTheme from './Themes/day.js';
 import * as SkyboxLoader from './Loaders/load_skybox.js';
 import * as PlatformLoader from './Loaders/load_platform.js';
 import * as BallLoader from './Loaders/load_ball.js';
+import * as ServerCalls from './Server/server_calls.js'
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -77,6 +78,7 @@ const playerControllerBody = new CANNON.Body({
     v_base.geometry.parameters.height / 2 - player_controller.geometry.parameters.height / 2 - 0.5
   ),
 });
+
 playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(playerControllerBody);
 let targetPosition = new CANNON.Vec3();
@@ -158,6 +160,8 @@ function animate() {
 
   player_controller.position.copy(playerControllerBody.position);
   player_controller.quaternion.copy(playerControllerBody.quaternion);
+
+  ServerCalls.updatePlayerPosition(player_controller.position);
 
   cannonDebugger.update(); 
 
