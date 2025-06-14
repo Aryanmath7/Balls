@@ -1,0 +1,7 @@
+{
+  "name": "colyseus-mvp-client",
+  "dependencies": {
+    "colyseus.js": "^0.15.28"
+  },
+  "type": "module"
+}

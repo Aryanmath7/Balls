@@ -18,6 +18,11 @@ import * as BarrierPhysicsLoader from './Physics/p_load_borders.js'
 import * as Utils from './Utils/game_functions.js'
 import * as Controls from './Utils/user_inputs.js'
 
+import * as Client from './Client/Client.js';
+
+//Connect to the server
+await Client.connectToServer();
+
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
 const camera = Camera.initMainCamera(scene); // Initialize camera with target scene
@@ -43,6 +48,8 @@ const {
 
 const vBall = BallLoader.loadBall(scene); // Load ball with radius 0.5
 
+
+//#region Visual of the player paddle
 const vPlayerPaddle = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 0.5),
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
@@ -52,11 +59,30 @@ vPlayerPaddle.castShadow = true; // Cast shadows
 vPlayerPaddle.receiveShadow = true; // Receive shadows
 scene.add(vPlayerPaddle);
 
-vPlayerPaddle.position.set(0, - vBase.geometry.parameters.height / 2 + vLeftPlayerBarrier.geometry.parameters.height / 2 + vPlayerPaddle.geometry.parameters.height + 0.1, vBase.geometry.parameters.depth / 2 + vLeftPlayerBarrier.geometry.parameters.depth / 2);
+//#endregion
 
+//#region Visual of the opponent paddle
+const vOpponentPaddle = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 0.5),
+  new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+);
+
+vOpponentPaddle.position.set(0, vBase.geometry.parameters.depth, 0 - vBase.geometry.parameters.width / 2);
+
+// Set rotation (for example, rotate -90 degrees around X axis) 
+// Laxman could not figure out how to rotate the paddle, so now our entire world is rotated instead
+vOpponentPaddle.rotation.x = -Math.PI / 2;
+
+vOpponentPaddle.castShadow = true; // Cast shadows
+vOpponentPaddle.receiveShadow = true; // Receive shadows
+scene.add(vOpponentPaddle);
+//#endregion
+
+//#region Light initialization
 //Initialize lights
 Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, DayTheme.LIGHT_DIRECTION);
 Lighting.initAmbientLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY);
+//#endregion
 
 
 // physics bodies
@@ -140,9 +166,18 @@ function animate() {
   if (Controls.isDragging) {
     const delta = new CANNON.Vec3().copy(Controls.targetPosition).vsub(pPlayerPaddle.position);
     pPlayerPaddle.velocity.set(delta.x * 10, 0, delta.z * 10);
+    Client.sendPlayerMove(pPlayerPaddle.position);
   } else {
     pPlayerPaddle.velocity.set(0, 0, 0);
   }
+
+  Client.onPlayerMoved((message) => {
+    // message should contain the opponent's paddle position: { x, y, z }
+    if (message && typeof message.x === "number" && typeof message.y === "number" && typeof message.z === "number") {
+      vOpponentPaddle.position.set(message.x + vBase.geometry.parameters.depth / 2, message.y , message.z - vBase.geometry.parameters.height / 2);
+    }
+  });
+
   clampBodyPositionToPlatform(pPlayerPaddle, 0.5, 0.25); // controller half size: width=1, depth=0.5
   clampBodyPositionToPlatform(pBall, 0.25, 0.25); 
   // Sync ball mesh with physics body
@@ -151,10 +186,6 @@ function animate() {
 
   vPlayerPaddle.position.copy(pPlayerPaddle.position);
   vPlayerPaddle.quaternion.copy(pPlayerPaddle.quaternion);
-  // ServerCalls.updatePlayerPosition(vPlayerPaddle.position);
-
-
-  // ServerCalls.onPlayerPositionUpdate(vPlayerPaddle.position.set.bind(vPlayerPaddle.position));
 
   cannonDebugger.update(); 
 

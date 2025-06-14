@@ -1,20 +1,14 @@
 {
-  "name": "my-socket-server",
+  "name": "balls-server",
   "version": "1.0.0",
-  "description": "Ultra-basic Node.js + Socket.IO server",
+  "description": "Colyseus server for Balls game",
   "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js"
   },
-  "keywords": [
-    "node",
-    "socket.io",
-    "server"
-  ],
-  "author": "Aryan Mathur",
-  "license": "MIT",
   "dependencies": {
-    "socket.io": "^4.7.5"
+    "colyseus": "^0.16.4",
+    "colyseus.js": "^0.16.19"
   }
 }
