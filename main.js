@@ -29,12 +29,10 @@ const geometry = new THREE.BoxGeometry(7, 12, 0.5);
 const material = new THREE.MeshStandardMaterial({ color: 0x0000FF });
 // platform
 
-const base = new THREE.Mesh(geometry, material);
-base.position.copy(groundBody.position);
-base.quaternion.copy(groundBody.quaternion);
-base.castShadow = true; // Cast shadows
-base.receiveShadow = true; // Receive shadows
-scene.add(base);
+const v_base = new THREE.Mesh(geometry, material);
+v_base.castShadow = true; // Cast shadows
+v_base.receiveShadow = true; // Receive shadows
+scene.add(v_base);
 
 // right barrier
 const border_height = 0.4; // How tall the box is
@@ -80,6 +78,7 @@ scene.add(opponent_barrier);
 v_base.add(opponent_barrier); // Glue box to rectangle
 opponent_barrier.position.set(0, v_base.geometry.parameters.height / 2 - opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2);
 
+const ballRadius = 0.25;
 const ballMesh = new THREE.Mesh(
   new THREE.SphereGeometry(ballRadius, 8, 8),
   new THREE.MeshStandardMaterial({ color: 0x00ff00 })
@@ -105,7 +104,18 @@ Lighting.initAmbientLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY)
 
 
 // physics bodies
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.82, 0)
+});
+const groundBody = new CANNON.Body({
+  shape: new CANNON.Box(new CANNON.Vec3(7 / 2, 12 / 2, 0.5 / 2)), // half extents
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(0, 0, 0),
+});
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Lay it flat
+world.addBody(groundBody);
 
+v_base.quaternion.copy(groundBody.quaternion);
 v_base.position.copy(groundBody.position);
 v_base.quaternion.copy(groundBody.quaternion);
 
@@ -121,22 +131,10 @@ renderer.domElement.addEventListener('mouseup', onMouseUp);
 
 
 
-// physics world
-const world = new CANNON.World({
-  gravity: new CANNON.Vec3(0, -9.82, 0)
-});
-const groundBody = new CANNON.Body({
-  shape: new CANNON.Box(new CANNON.Vec3(7 / 2, 12 / 2, 0.5 / 2)), // half extents
-  type: CANNON.Body.STATIC,
-  position: new CANNON.Vec3(0, 0, 0),
-});
-groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Lay it flat
-world.addBody(groundBody);
 
 const cannonDebugger = CannonDebugger(scene, world);
 
 
-const ballRadius = 0.25;
 const ballBody = new CANNON.Body({
   mass: 1, // dynamic
   shape: new CANNON.Sphere(ballRadius),
