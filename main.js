@@ -7,6 +7,7 @@ import * as Camera from './Camera/camera-helper.js';
 import * as DayTheme from './Themes/day.js';
 import * as SkyboxLoader from './Loaders/load_skybox.js';
 import * as PlatformLoader from './Loaders/load_platform.js';
+import * as BallLoader from './Loaders/load_ball.js';
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -27,16 +28,9 @@ let dragOffset = new THREE.Vector3();
 // visuals
 
 // platform
-const { base: v_base, rightBarrier: v_right_barrier, leftBarrier: v_left_barrier, playerBarrier: player_barrier, opponentBarrier: opponent_barrier } = PlatformLoader.loadPlatform(scene, 7, 0.5, 12); // Load platform with specified dimensions
+const { base: v_base, rightBarrier: v_right_barrier, leftBarrier: v_left_barrier, playerBarrier: player_barrier, opponentBarrier: opponent_barrier } = PlatformLoader.loadPlatform(scene, 10, 0.5, 15); // Load platform with specified dimensions
 
-const ballRadius = 0.25;
-const ballMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(ballRadius, 8, 8),
-  new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-);
-ballMesh.castShadow = true; // Cast shadows
-ballMesh.receiveShadow = true; // Receive shadows
-scene.add(ballMesh);
+const ballMesh = BallLoader.loadBall(scene); // Load ball with radius 0.5
 
 const player_controller = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 0.5),
@@ -59,87 +53,18 @@ const world = new CANNON.World({
   gravity: new CANNON.Vec3(0, -9.82, 0)
 });
 const cannonDebugger = CannonDebugger(scene, world);
-const groundBody = new CANNON.Body({
-  shape: new CANNON.Box(new CANNON.Vec3(7 / 2, 12 / 2, 0.5 / 2)), // half extents
-  type: CANNON.Body.STATIC,
-  position: new CANNON.Vec3(0, 0, 0),
-});
-groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Lay it flat
-world.addBody(groundBody);
 
-v_base.quaternion.copy(groundBody.quaternion);
-v_base.position.copy(groundBody.position);
-v_base.quaternion.copy(groundBody.quaternion);
-
-const ballBody = new CANNON.Body({
-  mass: 1, // dynamic
-  shape: new CANNON.Sphere(ballRadius),
-  position: new CANNON.Vec3(0, 5, 0), // start high
-  material: new CANNON.Material()
-});
-ballBody.allowSleep = false;
-world.addBody(ballBody);
-
+const ballBody = BallLoader.loadPhysicsBall(world, 0.25); // Load physics ball with radius 0.25
+const groundBody = PlatformLoader.loadPhysicsPlatform(world, v_base, 10, 0.5, 15); // Load physics platform with specified dimensions
 
 // friction
 const platformMat = new CANNON.Material();
 const ballMat = new CANNON.Material();
 
-groundBody.material = platformMat;
-ballBody.material = ballMat;
-
-const leftBarrierShape = new CANNON.Box(new CANNON.Vec3(v_left_barrier.geometry.parameters.width / 2, v_left_barrier.geometry.parameters.height / 2, v_left_barrier.geometry.parameters.depth / 2));
-const leftBarrierBody = new CANNON.Body({
-  shape: leftBarrierShape,
-  type: CANNON.Body.STATIC,
-  position: new CANNON.Vec3(
-    -v_base.geometry.parameters.width / 2 + v_left_barrier.geometry.parameters.width / 2,
-    v_base.geometry.parameters.depth / 2 + v_left_barrier.geometry.parameters.depth / 2,
-    0
-  ),
-});
-leftBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
-world.addBody(leftBarrierBody);
-
-
-const rightBarrierShape = new CANNON.Box(new CANNON.Vec3(v_right_barrier.geometry.parameters.width / 2, v_right_barrier.geometry.parameters.height / 2, v_right_barrier.geometry.parameters.depth / 2));
-const rightBarrierBody = new CANNON.Body({
-  shape: rightBarrierShape,
-  type: CANNON.Body.STATIC,
-  position: new CANNON.Vec3(
-    v_base.geometry.parameters.width / 2 - v_right_barrier.geometry.parameters.width / 2,
-    v_base.geometry.parameters.depth / 2 + v_right_barrier.geometry.parameters.depth / 2,
-    0
-  ),
-});
-rightBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
-world.addBody(rightBarrierBody);
-
-const playerBarrierShape = new CANNON.Box(new CANNON.Vec3(player_barrier.geometry.parameters.width / 2, player_barrier.geometry.parameters.height / 2, player_barrier.geometry.parameters.depth / 2));
-const playerBarrierBody = new CANNON.Body({
-  shape: playerBarrierShape,
-  type: CANNON.Body.STATIC,
-  position: new CANNON.Vec3(
-    0,
-    v_base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2,
-    v_base.geometry.parameters.height / 2 - player_barrier.geometry.parameters.height / 2
-  ),
-});
-playerBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
-world.addBody(playerBarrierBody);
-
-const opponentBarrierShape = new CANNON.Box(new CANNON.Vec3(opponent_barrier.geometry.parameters.width / 2, opponent_barrier.geometry.parameters.height / 2, opponent_barrier.geometry.parameters.depth / 2));
-const opponentBarrierBody = new CANNON.Body({
-  shape: opponentBarrierShape,
-  type: CANNON.Body.STATIC,
-  position: new CANNON.Vec3(
-    0,
-    v_base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2,
-    -v_base.geometry.parameters.height / 2 + opponent_barrier.geometry.parameters.height / 2
-  ),
-});
-opponentBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
-world.addBody(opponentBarrierBody);
+PlatformLoader.loadPhysicsBarrier(world, v_base, v_left_barrier);
+PlatformLoader.loadPhysicsBarrier(world, v_base, v_right_barrier);
+PlatformLoader.loadPhysicsBarrier(world, v_base, player_barrier);
+PlatformLoader.loadPhysicsBarrier(world, v_base, opponent_barrier);
 
 const playerControllerShape = new CANNON.Box(new CANNON.Vec3(player_controller.geometry.parameters.width / 2, player_controller.geometry.parameters.height / 2, player_controller.geometry.parameters.depth / 2));
 const playerControllerBody = new CANNON.Body({
@@ -152,6 +77,7 @@ const playerControllerBody = new CANNON.Body({
     v_base.geometry.parameters.height / 2 - player_controller.geometry.parameters.height / 2 - 0.5
   ),
 });
+
 playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(playerControllerBody);
 let targetPosition = new CANNON.Vec3();
@@ -234,7 +160,7 @@ function animate() {
   player_controller.position.copy(playerControllerBody.position);
   player_controller.quaternion.copy(playerControllerBody.quaternion);
 
-  //cannonDebugger.update(); 
+  cannonDebugger.update(); 
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
