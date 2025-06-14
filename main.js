@@ -16,6 +16,15 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let isDragging = false;
+let dragOffset = new THREE.Vector3();
+
+renderer.domElement.addEventListener('mousedown', onMouseDown);
+renderer.domElement.addEventListener('mousemove', onMouseMove);
+renderer.domElement.addEventListener('mouseup', onMouseUp);
+
 // physics world
 const world = new CANNON.World({
   gravity: new CANNON.Vec3(0, -9.82, 0)
@@ -40,7 +49,7 @@ base.quaternion.copy(groundBody.quaternion);
 scene.add(base);
 
 // right barrier
-const border_height = 0.25; // How tall the box is
+const border_height = 0.4; // How tall the box is
 const right_barrier = new THREE.Mesh(
   new THREE.BoxGeometry(0.1, base.geometry.parameters.height, border_height),
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
@@ -106,7 +115,6 @@ const player_controller = new THREE.Mesh(
 
 scene.add(player_controller);
 
-base.add(player_controller); // Glue box to rectangle
 player_controller.position.set(0, - base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2 + player_controller.geometry.parameters.height + 0.1, base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
 
 //Initialize lights
@@ -184,7 +192,7 @@ const playerControllerBody = new CANNON.Body({
     base.geometry.parameters.height / 2 - player_controller.geometry.parameters.height / 2 - 0.5
   ),
 });
-playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(playerControllerBody);
 
 // Add contact material to enable friction
@@ -193,6 +201,53 @@ const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
   restitution: 0.5     // bounciness
 });
 world.addContactMaterial(contactMat);
+
+// move player box
+function updateMouse(event) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+}
+
+function onMouseDown(event) {
+  updateMouse(event);
+  raycaster.setFromCamera(mouse, camera);
+
+  const intersects = raycaster.intersectObject(player_controller);
+  if (intersects.length > 0) {
+    isDragging = true;
+    dragOffset.copy(intersects[0].point).sub(player_controller.position);
+  }
+}
+
+function onMouseMove(event) {
+  if (!isDragging) return;
+
+  updateMouse(event);
+  raycaster.setFromCamera(mouse, camera);
+
+  // Project onto the flat plane of the platform (Y is up)
+  const planeY = player_controller.position.y;
+  const platformPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
+  const intersection = new THREE.Vector3();
+
+  if (raycaster.ray.intersectPlane(platformPlane, intersection)) {
+    const newPos = intersection.sub(dragOffset);
+
+    // Optional: clamp movement within platform bounds
+    newPos.x = THREE.MathUtils.clamp(newPos.x, -3, 3);
+    newPos.z = THREE.MathUtils.clamp(newPos.z, -5.5, 5.5);
+
+    // Set position of Cannon body (which syncs to mesh)
+    playerControllerBody.position.set(newPos.x, player_controller.position.y, newPos.z);
+  }
+}
+
+function onMouseUp() {
+  isDragging = false;
+}
+
+
 
 // Animate
 const fixedTimeStep = 1 / 60;
