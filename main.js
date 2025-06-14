@@ -265,8 +265,8 @@ function animate() {
   player_controller.position.copy(playerControllerBody.position);
   player_controller.quaternion.copy(playerControllerBody.quaternion);
 
-  cannonDebugger.update(); 
-  
+  //cannonDebugger.update(); 
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
 }
