@@ -37,8 +37,8 @@ io.on('connection', (socket) => {
     playerPosition.y = position.y;
     playerPosition.z = position.z;
 
-    // Broadcast the updated player position to all clients
-    io.emit('updatePlayerPosition', playerPosition);
+    // Broadcast the updated player position to all clients except the sender
+    socket.broadcast.emit('updatePlayerPosition', playerPosition);
   });
 
 

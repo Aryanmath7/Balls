@@ -139,7 +139,7 @@ function onMouseUp() {
 }
 
 // Animate
-const fixedTimeStep = 1 / 60;
+const fixedTimeStep = 1 / 30;
 
 function animate() {
   requestAnimationFrame(animate);
