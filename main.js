@@ -16,10 +16,36 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Mouse Control Initialization
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 let isDragging = false;
 let dragOffset = new THREE.Vector3();
+
+
+
+
+// visuals
+
+
+
+// physics bodies
+
+
+
+
+// user inputs
+
+
+
+
+// animate
+
+
+
+
+
+
 
 renderer.domElement.addEventListener('mousedown', onMouseDown);
 renderer.domElement.addEventListener('mousemove', onMouseMove);
