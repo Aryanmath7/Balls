@@ -1,6 +1,9 @@
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
+
 const httpServer = createServer();
 
 const io = new Server(httpServer, {
@@ -22,6 +25,6 @@ io.on('connection', (socket) => {
   });
 });
 
-httpServer.listen(3000, () => {
-  console.log('Socket.IO server running at http://localhost:3000/');
+httpServer.listen(PORT, HOST, () => {
+  console.log(`Socket.IO server running at http://${HOST}:${PORT}/`);
 });
