@@ -31,22 +31,18 @@ world.addBody(groundBody);
 const cannonDebugger = CannonDebugger(scene, world);
 
 // Geometry + Material (responsive to light)
-const width = 7;
-const height = 12;
-const depth = 0.5;
-const geometry = new THREE.BoxGeometry(width, height, depth);
+const geometry = new THREE.BoxGeometry(7, 12, 0.5);
 const material = new THREE.MeshStandardMaterial({ color: 0x0000FF });
 // platform
 const base = new THREE.Mesh(geometry, material);
-base.rotation.x = -Math.PI / 2;
 base.position.copy(groundBody.position);
 base.quaternion.copy(groundBody.quaternion);
 scene.add(base);
 
 // right barrier
-const boxHeight = 0.25; // How tall the box is
+const border_height = 0.25; // How tall the box is
 const right_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(0.1, height, boxHeight),
+  new THREE.BoxGeometry(0.1, base.geometry.parameters.height, border_height),
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
 );
 
@@ -57,7 +53,7 @@ right_barrier.position.set(base.geometry.parameters.width / 2 - right_barrier.ge
 
 // left barrier
 const left_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(0.1, height, boxHeight),
+  new THREE.BoxGeometry(0.1, base.geometry.parameters.height, border_height),
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
 );
 
@@ -69,7 +65,7 @@ left_barrier.position.set(- base.geometry.parameters.width / 2 + left_barrier.ge
 
 // player_barrier
 const player_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(width, 0.1, boxHeight),
+  new THREE.BoxGeometry(base.geometry.parameters.width, 0.1, border_height),
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
 );
 
@@ -80,12 +76,11 @@ player_barrier.position.set(0, - base.geometry.parameters.height / 2 + player_ba
 
 // opponent_barrier
 const opponent_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(width, 0.1, boxHeight),
+  new THREE.BoxGeometry(base.geometry.parameters.width, 0.1, border_height),
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
 );
 
 scene.add(opponent_barrier);
-
 base.add(opponent_barrier); // Glue box to rectangle
 opponent_barrier.position.set(0, base.geometry.parameters.height / 2 - opponent_barrier.geometry.parameters.height / 2, base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2);
 
@@ -104,6 +99,16 @@ const ballMesh = new THREE.Mesh(
 );
 scene.add(ballMesh);
 
+const player_controller = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 0.5),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+
+scene.add(player_controller);
+
+base.add(player_controller); // Glue box to rectangle
+player_controller.position.set(0, - base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2 + player_controller.geometry.parameters.height + 0.1, base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
+
 //Initialize lights
 Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, DayTheme.LIGHT_DIRECTION);
 Lighting.initAmbientLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY);
@@ -116,17 +121,71 @@ groundBody.material = platformMat;
 ballBody.material = ballMat;
 
 // physics shit
-const leftBarrierShape = new CANNON.Box(new CANNON.Vec3(0.1 / 2, 1 / 2, 12 / 2));
+const leftBarrierShape = new CANNON.Box(new CANNON.Vec3(left_barrier.geometry.parameters.width / 2, left_barrier.geometry.parameters.height / 2, left_barrier.geometry.parameters.depth / 2));
 const leftBarrierBody = new CANNON.Body({
   shape: leftBarrierShape,
   type: CANNON.Body.STATIC,
   position: new CANNON.Vec3(
-    -base.geometry.parameters.width / 2,
-    0,
+    -base.geometry.parameters.width / 2 + left_barrier.geometry.parameters.width / 2,
+    base.geometry.parameters.depth / 2 + left_barrier.geometry.parameters.depth / 2,
     0
   ),
 });
+leftBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
 world.addBody(leftBarrierBody);
+
+
+const rightBarrierShape = new CANNON.Box(new CANNON.Vec3(right_barrier.geometry.parameters.width / 2, right_barrier.geometry.parameters.height / 2, right_barrier.geometry.parameters.depth / 2));
+const rightBarrierBody = new CANNON.Body({
+  shape: rightBarrierShape,
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(
+    base.geometry.parameters.width / 2 - right_barrier.geometry.parameters.width / 2,
+    base.geometry.parameters.depth / 2 + right_barrier.geometry.parameters.depth / 2,
+    0
+  ),
+});
+rightBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+world.addBody(rightBarrierBody);
+
+const playerBarrierShape = new CANNON.Box(new CANNON.Vec3(player_barrier.geometry.parameters.width / 2, player_barrier.geometry.parameters.height / 2, player_barrier.geometry.parameters.depth / 2));
+const playerBarrierBody = new CANNON.Body({
+  shape: playerBarrierShape,
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(
+    0,
+    base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2,
+    base.geometry.parameters.height / 2 - player_barrier.geometry.parameters.height / 2
+  ),
+});
+playerBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+world.addBody(playerBarrierBody);
+
+const opponentBarrierShape = new CANNON.Box(new CANNON.Vec3(opponent_barrier.geometry.parameters.width / 2, opponent_barrier.geometry.parameters.height / 2, opponent_barrier.geometry.parameters.depth / 2));
+const opponentBarrierBody = new CANNON.Body({
+  shape: opponentBarrierShape,
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(
+    0,
+    base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2,
+    -base.geometry.parameters.height / 2 + opponent_barrier.geometry.parameters.height / 2
+  ),
+});
+opponentBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+world.addBody(opponentBarrierBody);
+
+const playerControllerShape = new CANNON.Box(new CANNON.Vec3(player_controller.geometry.parameters.width / 2, player_controller.geometry.parameters.height / 2, player_controller.geometry.parameters.depth / 2));
+const playerControllerBody = new CANNON.Body({
+  shape: playerControllerShape,
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(
+    0,
+    base.geometry.parameters.depth / 2 + player_controller.geometry.parameters.depth / 2,
+    base.geometry.parameters.height / 2 - player_controller.geometry.parameters.height / 2 - 0.5
+  ),
+});
+playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+world.addBody(playerControllerBody);
 
 // Add contact material to enable friction
 const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
@@ -148,11 +207,14 @@ function animate() {
   ballMesh.position.copy(ballBody.position);
   ballMesh.quaternion.copy(ballBody.quaternion);
 
+  player_controller.position.copy(playerControllerBody.position);
+  player_controller.quaternion.copy(playerControllerBody.quaternion);
+
   cannonDebugger.update(); 
 
   renderer.render(scene, camera);
 }
 animate();
 setTimeout(() => {
-  ballBody.velocity.set(-5, 0, 0); // roll along +X
+  ballBody.velocity.set(-5, 0, 5);
 }, 5000);
