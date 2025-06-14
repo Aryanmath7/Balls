@@ -6,6 +6,7 @@ import * as Lighting from './Lighting/lighting_helper.js';
 import * as Camera from './Camera/camera-helper.js';
 import * as DayTheme from './Themes/day.js';
 import * as SkyboxLoader from './Loaders/load_skybox.js';
+import * as Barrier from './Loaders/borders.js';
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -35,46 +36,23 @@ v_base.receiveShadow = true; // Receive shadows
 scene.add(v_base);
 
 // right barrier
-const border_height = 0.4; // How tall the box is
-const right_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(0.1, v_base.geometry.parameters.height, border_height),
-  new THREE.MeshStandardMaterial({ color: 0xff0000 })
-);
-
-scene.add(right_barrier);
-v_base.add(right_barrier); // Glue box to rectangle
-right_barrier.position.set(v_base.geometry.parameters.width / 2 - right_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + right_barrier.geometry.parameters.depth / 2);
+const border_height = 0.4;
+const v_right_barrier = Barrier.initBorder(scene, 0.1, v_base.geometry.parameters.height, border_height)
+v_base.add(v_right_barrier);
+v_right_barrier.position.set(v_base.geometry.parameters.width / 2 - v_right_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + v_right_barrier.geometry.parameters.depth / 2);
 
 // left barrier
-const left_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(0.1, v_base.geometry.parameters.height, border_height),
-  new THREE.MeshStandardMaterial({ color: 0xff0000 })
-);
-
-scene.add(left_barrier);
-
-v_base.add(left_barrier); // Glue box to rectangle
-left_barrier.position.set(- v_base.geometry.parameters.width / 2 + left_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + left_barrier.geometry.parameters.depth / 2);
-
+const v_left_barrier = Barrier.initBorder(scene, 0.1, v_base.geometry.parameters.height, border_height)
+v_base.add(v_left_barrier);
+v_left_barrier.position.set(- v_base.geometry.parameters.width / 2 + v_left_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + v_left_barrier.geometry.parameters.depth / 2);
 
 // player_barrier
-const player_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(v_base.geometry.parameters.width, 0.1, border_height),
-  new THREE.MeshStandardMaterial({ color: 0xff0000 })
-);
-
-scene.add(player_barrier);
-
+const player_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width, 0.1, border_height)
 v_base.add(player_barrier); // Glue box to rectangle
 player_barrier.position.set(0, - v_base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
 
 // opponent_barrier
-const opponent_barrier = new THREE.Mesh(
-  new THREE.BoxGeometry(v_base.geometry.parameters.width, 0.1, border_height),
-  new THREE.MeshStandardMaterial({ color: 0xff0000 })
-);
-
-scene.add(opponent_barrier);
+const opponent_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width, 0.1, border_height)
 v_base.add(opponent_barrier); // Glue box to rectangle
 opponent_barrier.position.set(0, v_base.geometry.parameters.height / 2 - opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2);
 
@@ -107,6 +85,7 @@ Lighting.initAmbientLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY)
 const world = new CANNON.World({
   gravity: new CANNON.Vec3(0, -9.82, 0)
 });
+const cannonDebugger = CannonDebugger(scene, world);
 const groundBody = new CANNON.Body({
   shape: new CANNON.Box(new CANNON.Vec3(7 / 2, 12 / 2, 0.5 / 2)), // half extents
   type: CANNON.Body.STATIC,
@@ -118,22 +97,6 @@ world.addBody(groundBody);
 v_base.quaternion.copy(groundBody.quaternion);
 v_base.position.copy(groundBody.position);
 v_base.quaternion.copy(groundBody.quaternion);
-
-
-// user inputs
-
-renderer.domElement.addEventListener('mousedown', onMouseDown);
-renderer.domElement.addEventListener('mousemove', onMouseMove);
-renderer.domElement.addEventListener('mouseup', onMouseUp);
-
-
-// animate
-
-
-
-
-const cannonDebugger = CannonDebugger(scene, world);
-
 
 const ballBody = new CANNON.Body({
   mass: 1, // dynamic
@@ -151,14 +114,13 @@ const ballMat = new CANNON.Material();
 groundBody.material = platformMat;
 ballBody.material = ballMat;
 
-// physics shit
-const leftBarrierShape = new CANNON.Box(new CANNON.Vec3(left_barrier.geometry.parameters.width / 2, left_barrier.geometry.parameters.height / 2, left_barrier.geometry.parameters.depth / 2));
+const leftBarrierShape = new CANNON.Box(new CANNON.Vec3(v_left_barrier.geometry.parameters.width / 2, v_left_barrier.geometry.parameters.height / 2, v_left_barrier.geometry.parameters.depth / 2));
 const leftBarrierBody = new CANNON.Body({
   shape: leftBarrierShape,
   type: CANNON.Body.STATIC,
   position: new CANNON.Vec3(
-    -v_base.geometry.parameters.width / 2 + left_barrier.geometry.parameters.width / 2,
-    v_base.geometry.parameters.depth / 2 + left_barrier.geometry.parameters.depth / 2,
+    -v_base.geometry.parameters.width / 2 + v_left_barrier.geometry.parameters.width / 2,
+    v_base.geometry.parameters.depth / 2 + v_left_barrier.geometry.parameters.depth / 2,
     0
   ),
 });
@@ -166,13 +128,13 @@ leftBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 world.addBody(leftBarrierBody);
 
 
-const rightBarrierShape = new CANNON.Box(new CANNON.Vec3(right_barrier.geometry.parameters.width / 2, right_barrier.geometry.parameters.height / 2, right_barrier.geometry.parameters.depth / 2));
+const rightBarrierShape = new CANNON.Box(new CANNON.Vec3(v_right_barrier.geometry.parameters.width / 2, v_right_barrier.geometry.parameters.height / 2, v_right_barrier.geometry.parameters.depth / 2));
 const rightBarrierBody = new CANNON.Body({
   shape: rightBarrierShape,
   type: CANNON.Body.STATIC,
   position: new CANNON.Vec3(
-    v_base.geometry.parameters.width / 2 - right_barrier.geometry.parameters.width / 2,
-    v_base.geometry.parameters.depth / 2 + right_barrier.geometry.parameters.depth / 2,
+    v_base.geometry.parameters.width / 2 - v_right_barrier.geometry.parameters.width / 2,
+    v_base.geometry.parameters.depth / 2 + v_right_barrier.geometry.parameters.depth / 2,
     0
   ),
 });
@@ -225,6 +187,12 @@ const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
 });
 world.addContactMaterial(contactMat);
 
+// user inputs
+
+renderer.domElement.addEventListener('mousedown', onMouseDown);
+renderer.domElement.addEventListener('mousemove', onMouseMove);
+renderer.domElement.addEventListener('mouseup', onMouseUp);
+
 // move player box
 function updateMouse(event) {
   const rect = renderer.domElement.getBoundingClientRect();
@@ -269,8 +237,6 @@ function onMouseMove(event) {
 function onMouseUp() {
   isDragging = false;
 }
-
-
 
 // Animate
 const fixedTimeStep = 1 / 60;
