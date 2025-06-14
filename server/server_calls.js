@@ -15,7 +15,9 @@ export function updatePlayerPosition(position) {
     socket.emit('updatePlayerPosition', position);
 }
 
-socket.on('player position', (position) => {
-    console.log('Updated player position:', position);
-    player_controller.position.set(position.x, position.y, position.z);
-});
+export function onPlayerPositionUpdate(callback) {
+    socket.on('player position', (position) => {
+        console.log('Updated player position:', position);
+        callback(position);
+    });
+}

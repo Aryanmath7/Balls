@@ -161,7 +161,7 @@ function animate() {
   player_controller.position.copy(playerControllerBody.position);
   player_controller.quaternion.copy(playerControllerBody.quaternion);
 
-  ServerCalls.updatePlayerPosition(player_controller.position);
+  ServerCalls.onPlayerPositionUpdate(player_controller.position.set);
 
   cannonDebugger.update(); 
 
