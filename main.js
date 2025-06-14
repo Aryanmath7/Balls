@@ -22,6 +22,7 @@ import * as Client from './Client/Client.js';
 
 //Connect to the server
 await Client.connectToServer();
+const room = Client.returnRoom();
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -172,9 +173,13 @@ function animate() {
   }
 
   Client.onPlayerMoved((message) => {
+    console.log(room);
     // message should contain the opponent's paddle position: { x, y, z }
-    if (message && typeof message.x === "number" && typeof message.y === "number" && typeof message.z === "number") {
-      vOpponentPaddle.position.set(message.x + vBase.geometry.parameters.depth / 2, message.y , message.z - vBase.geometry.parameters.height / 2);
+    if (message.id == room.sessionId) {
+      return;
+    }
+    else{
+      vOpponentPaddle.position.set(-message.x, message.y , -message.z);
     }
   });
 

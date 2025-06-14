@@ -4,6 +4,10 @@ const client = new Client("ws://localhost:3000");
 let room = null;
 const remotePlayers = {}; // id → paddle mesh or position vector
 
+export function returnRoom() {
+    return room;
+}
+
 // Connect to room
 export async function connectToServer() {
   room = await client.joinOrCreate("lobby");
