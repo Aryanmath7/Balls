@@ -2,11 +2,14 @@ import * as THREE from 'https://esm.sh/three';
 import * as CANNON from 'https://esm.sh/cannon-es';
 import CannonDebugger from 'https://esm.sh/cannon-es-debugger';
 
+import * as Lighting from './Lighting/lighting_helper.js';
+import * as Camera from './Camera/camera-helper.js';
+import * as DayTheme from './Themes/day.js';
+
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-  75, window.innerWidth / window.innerHeight, 0.1, 1000
-);
+const camera = Camera.initMainCamera(scene); // Initialize camera with target scene
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -99,26 +102,9 @@ const ballMesh = new THREE.Mesh(
 );
 scene.add(ballMesh);
 
-
-// Add lighting
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // soft light everywhere
-scene.add(ambientLight);
-
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-directionalLight.position.set(5, 10, 7); // from above/front
-scene.add(directionalLight);
-
-// Camera
-camera.position.set(0, 4, 10);
-camera.lookAt(base.position);
-
-// Resize handler
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  camera.lookAt(base.position);
-});
+//Initialize lights
+Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, DayTheme.LIGHT_DIRECTION);
+Lighting.initAmbientLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY);
 
 // friction
 const platformMat = new CANNON.Material();
