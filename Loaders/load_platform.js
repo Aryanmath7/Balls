@@ -4,88 +4,88 @@ import * as CANNON from 'https://esm.sh/cannon-es';
 
 export function loadPlatform(scene, width = 7, height = 0.5, depth = 12, borderWidth = 0.1, borderHeight = 0.5) {
 
-    const v_base = new THREE.Mesh(new THREE.BoxGeometry(width, depth, height), new THREE.MeshStandardMaterial({ color: 0x0000FF }));
-    scene.add(v_base);
-    v_base.castShadow = true; // Cast shadows
-    v_base.receiveShadow = true; // Receive shadows
+    const vBase = new THREE.Mesh(new THREE.BoxGeometry(width, depth, height), new THREE.MeshStandardMaterial({ color: 0x0000FF }));
+    scene.add(vBase);
+    vBase.castShadow = true; // Cast shadows
+    vBase.receiveShadow = true; // Receive shadows
 
     // right barrier
-    const v_right_barrier = Barrier.initBorder(scene, borderWidth, v_base.geometry.parameters.height, borderHeight)
-    v_base.add(v_right_barrier);
-    v_right_barrier.position.set(v_base.geometry.parameters.width / 2 - v_right_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + v_right_barrier.geometry.parameters.depth / 2);
-    v_right_barrier.castShadow = true; // Cast shadows
-    v_right_barrier.receiveShadow = true; // Receive shadows
+    const vRightBarrier = Barrier.initBorder(scene, borderWidth, vBase.geometry.parameters.height, borderHeight)
+    vBase.add(vRightBarrier);
+    vRightBarrier.position.set(vBase.geometry.parameters.width / 2 - vRightBarrier.geometry.parameters.width / 2, 0, vBase.geometry.parameters.depth / 2 + vRightBarrier.geometry.parameters.depth / 2);
+    vRightBarrier.castShadow = true; // Cast shadows
+    vRightBarrier.receiveShadow = true; // Receive shadows
 
     // left barrier
-    const v_left_barrier = Barrier.initBorder(scene, borderWidth, v_base.geometry.parameters.height, borderHeight)
-    v_base.add(v_left_barrier);
-    v_left_barrier.position.set(- v_base.geometry.parameters.width / 2 + v_left_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + v_left_barrier.geometry.parameters.depth / 2);
-    v_left_barrier.castShadow = true; // Cast shadows
-    v_left_barrier.receiveShadow = true; // Receive shadows
+    const vLeftBarrier = Barrier.initBorder(scene, borderWidth, vBase.geometry.parameters.height, borderHeight)
+    vBase.add(vLeftBarrier);
+    vLeftBarrier.position.set(- vBase.geometry.parameters.width / 2 + vLeftBarrier.geometry.parameters.width / 2, 0, vBase.geometry.parameters.depth / 2 + vLeftBarrier.geometry.parameters.depth / 2);
+    vLeftBarrier.castShadow = true; // Cast shadows
+    vLeftBarrier.receiveShadow = true; // Receive shadows
 
     // player_barrier
-    const left_player_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
-    v_base.add(left_player_barrier); // Glue box to rectangle
-    left_player_barrier.position.set(v_left_barrier.position.x + left_player_barrier.geometry.parameters.width / 2, - v_base.geometry.parameters.height / 2 + left_player_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + left_player_barrier.geometry.parameters.depth / 2);
-    left_player_barrier.castShadow = true; // Cast shadows
-    left_player_barrier.receiveShadow = true; // Receive shadows
+    const vLeftPlayerBarrier = Barrier.initBorder(scene, vBase.geometry.parameters.width / 3, borderWidth, borderHeight)
+    vBase.add(vLeftPlayerBarrier); // Glue box to rectangle
+    vLeftPlayerBarrier.position.set(vLeftBarrier.position.x + vLeftPlayerBarrier.geometry.parameters.width / 2, - vBase.geometry.parameters.height / 2 + vLeftPlayerBarrier.geometry.parameters.height / 2, vBase.geometry.parameters.depth / 2 + vLeftPlayerBarrier.geometry.parameters.depth / 2);
+    vLeftPlayerBarrier.castShadow = true; // Cast shadows
+    vLeftPlayerBarrier.receiveShadow = true; // Receive shadows
 
     // opponent_barrier
-    const left_opponent_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
-    v_base.add(left_opponent_barrier); // Glue box to rectangle
-    left_opponent_barrier.position.set(v_left_barrier.position.x + left_opponent_barrier.geometry.parameters.width / 2, v_base.geometry.parameters.height / 2 - left_opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + left_opponent_barrier.geometry.parameters.depth / 2);
-    left_opponent_barrier.castShadow = true; // Cast shadows
-    left_opponent_barrier.receiveShadow = true; // Receive shadows
+    const vLeftOpponentBarrier = Barrier.initBorder(scene, vBase.geometry.parameters.width / 3, borderWidth, borderHeight)
+    vBase.add(vLeftOpponentBarrier); // Glue box to rectangle
+    vLeftOpponentBarrier.position.set(vLeftBarrier.position.x + vLeftOpponentBarrier.geometry.parameters.width / 2, vBase.geometry.parameters.height / 2 - vLeftOpponentBarrier.geometry.parameters.height / 2, vBase.geometry.parameters.depth / 2 + vLeftOpponentBarrier.geometry.parameters.depth / 2);
+    vLeftOpponentBarrier.castShadow = true; // Cast shadows
+    vLeftOpponentBarrier.receiveShadow = true; // Receive shadows
 
     // player_barrier
-    const right_player_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
-    v_base.add(right_player_barrier); // Glue box to rectangle
-    right_player_barrier.position.set(v_right_barrier.position.x - right_player_barrier.geometry.parameters.width / 2, - v_base.geometry.parameters.height / 2 + right_player_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + right_player_barrier.geometry.parameters.depth / 2);
-    right_player_barrier.castShadow = true; // Cast shadows
-    right_player_barrier.receiveShadow = true; // Receive shadows
+    const vRightPlayerBarrier = Barrier.initBorder(scene, vBase.geometry.parameters.width / 3, borderWidth, borderHeight)
+    vBase.add(vRightPlayerBarrier); // Glue box to rectangle
+    vRightPlayerBarrier.position.set(vRightBarrier.position.x - vRightPlayerBarrier.geometry.parameters.width / 2, - vBase.geometry.parameters.height / 2 + vRightPlayerBarrier.geometry.parameters.height / 2, vBase.geometry.parameters.depth / 2 + vRightPlayerBarrier.geometry.parameters.depth / 2);
+    vRightPlayerBarrier.castShadow = true; // Cast shadows
+    vRightPlayerBarrier.receiveShadow = true; // Receive shadows
 
     // opponent_barrier
-    const right_opponent_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width / 3, borderWidth, borderHeight)
-    v_base.add(right_opponent_barrier); // Glue box to rectangle
-    right_opponent_barrier.position.set(v_right_barrier.position.x - right_opponent_barrier.geometry.parameters.width / 2, v_base.geometry.parameters.height / 2 - right_opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + right_opponent_barrier.geometry.parameters.depth / 2);
-    right_opponent_barrier.castShadow = true; // Cast shadows
-    right_opponent_barrier.receiveShadow = true; // Receive shadows
+    const vRightOpponentBarrier = Barrier.initBorder(scene, vBase.geometry.parameters.width / 3, borderWidth, borderHeight)
+    vBase.add(vRightOpponentBarrier); // Glue box to rectangle
+    vRightOpponentBarrier.position.set(vRightBarrier.position.x - vRightOpponentBarrier.geometry.parameters.width / 2, vBase.geometry.parameters.height / 2 - vRightOpponentBarrier.geometry.parameters.height / 2, vBase.geometry.parameters.depth / 2 + vRightOpponentBarrier.geometry.parameters.depth / 2);
+    vRightOpponentBarrier.castShadow = true; // Cast shadows
+    vRightOpponentBarrier.receiveShadow = true; // Receive shadows
 
     return {
-        base: v_base,
-        rightBarrier: v_right_barrier,
-        leftBarrier: v_left_barrier,
-        leftPlayerBarrier: left_player_barrier,
-        leftOpponentBarrier: left_opponent_barrier,
-        rightPlayerBarrier: right_player_barrier,
-        rightOpponentBarrier: right_opponent_barrier
+        vBase: vBase,
+        vRightBarrier: vRightBarrier,
+        vLeftBarrier: vLeftBarrier,
+        vLeftPlayerBarrier: vLeftPlayerBarrier,
+        vLeftOpponentBarrier: vLeftOpponentBarrier,
+        vRightPlayerBarrier: vRightPlayerBarrier,
+        vRightOpponentBarrier: vRightOpponentBarrier
     };
 }
 
-export function loadPhysicsPlatform(world, v_base, width = 7, height = 0.5, depth = 12){
-    const groundBody = new CANNON.Body({
+export function loadPhysicsPlatform(world, vBase, width = 7, height = 0.5, depth = 12){
+    const pGroundBody = new CANNON.Body({
       shape: new CANNON.Box(new CANNON.Vec3(width / 2, depth / 2, height / 2)), // half extents
       type: CANNON.Body.STATIC,
       position: new CANNON.Vec3(0, 0, 0),
     });
-    groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Lay it flat
-    world.addBody(groundBody);
+    pGroundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Lay it flat
+    world.addBody(pGroundBody);
     
-    v_base.quaternion.copy(groundBody.quaternion);
-    v_base.position.copy(groundBody.position);
-    v_base.quaternion.copy(groundBody.quaternion);
+    vBase.quaternion.copy(pGroundBody.quaternion);
+    vBase.position.copy(pGroundBody.position);
+    vBase.quaternion.copy(pGroundBody.quaternion);
 
-    return groundBody;
+    return pGroundBody;
 }
 
 export function loadPhysicsBarrier(world, v_barrier) {
-    const barrierBody = new CANNON.Body({
+    const pBarrierBody = new CANNON.Body({
         shape: new CANNON.Box(new CANNON.Vec3(v_barrier.geometry.parameters.width / 2, v_barrier.geometry.parameters.height / 2, v_barrier.geometry.parameters.depth / 2)), // half extents
         type: CANNON.Body.STATIC,
         position: new CANNON.Vec3(v_barrier.position.x, v_barrier.position.z, v_barrier.position.y), // Adjust position to match the barrier
     });
-    barrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
-    world.addBody(barrierBody);
+    pBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+    world.addBody(pBarrierBody);
 
-    return barrierBody;
+    return pBarrierBody;
 }

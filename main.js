@@ -29,20 +29,28 @@ let dragOffset = new THREE.Vector3();
 // visuals
 
 // platform
-const { base: v_base, rightBarrier: v_right_barrier, leftBarrier: v_left_barrier, leftPlayerBarrier: left_player_barrier, leftOpponentBarrier: left_opponent_barrier, rightPlayerBarrier: right_player_barrier, rightOpponentBarrier: right_opponent_barrier } = PlatformLoader.loadPlatform(scene, 10, 0.5, 15); // Load platform with specified dimensions
+const {
+        vBase: vBase,
+        vRightBarrier: vRightBarrier,
+        vLeftBarrier: vLeftBarrier,
+        vLeftPlayerBarrier: vLeftPlayerBarrier,
+        vLeftOpponentBarrier: vLeftOpponentBarrier,
+        vRightPlayerBarrier: vRightPlayerBarrier,
+        vRightOpponentBarrier: vRightOpponentBarrier
+    } = PlatformLoader.loadPlatform(scene, 10, 0.5, 15); // Load platform with specified dimensions
 
-const ballMesh = BallLoader.loadBall(scene); // Load ball with radius 0.5
+const vBall = BallLoader.loadBall(scene); // Load ball with radius 0.5
 
-const player_controller = new THREE.Mesh(
+const vPlayerPaddle = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 0.5),
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
 );
 
-player_controller.castShadow = true; // Cast shadows
-player_controller.receiveShadow = true; // Receive shadows
-scene.add(player_controller);
+vPlayerPaddle.castShadow = true; // Cast shadows
+vPlayerPaddle.receiveShadow = true; // Receive shadows
+scene.add(vPlayerPaddle);
 
-player_controller.position.set(0, - v_base.geometry.parameters.height / 2 + left_player_barrier.geometry.parameters.height / 2 + player_controller.geometry.parameters.height + 0.1, v_base.geometry.parameters.depth / 2 + left_player_barrier.geometry.parameters.depth / 2);
+vPlayerPaddle.position.set(0, - vBase.geometry.parameters.height / 2 + vLeftPlayerBarrier.geometry.parameters.height / 2 + vPlayerPaddle.geometry.parameters.height + 0.1, vBase.geometry.parameters.depth / 2 + vLeftPlayerBarrier.geometry.parameters.depth / 2);
 
 //Initialize lights
 Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, DayTheme.LIGHT_DIRECTION);
@@ -57,46 +65,46 @@ const world = new CANNON.World({
 
 const cannonDebugger = CannonDebugger(scene, world);
 
-const ballBody = BallLoader.loadPhysicsBall(world, 0.25); // Load physics ball with radius 0.25
-const groundBody = PlatformLoader.loadPhysicsPlatform(world, v_base, 10, 0.5, 15); // Load physics platform with specified dimensions
+const pBall = BallLoader.loadPhysicsBall(world, 0.25); // Load physics ball with radius 0.25
+const pGroundBody = PlatformLoader.loadPhysicsPlatform(world, vBase, 10, 0.5, 15); // Load physics platform with specified dimensions
 
 // friction
 const platformMat = new CANNON.Material();
 const ballMat = new CANNON.Material();
 
-PlatformLoader.loadPhysicsBarrier(world, v_left_barrier);
-PlatformLoader.loadPhysicsBarrier(world, v_right_barrier);
-PlatformLoader.loadPhysicsBarrier(world, left_player_barrier);
-PlatformLoader.loadPhysicsBarrier(world, left_opponent_barrier);
-PlatformLoader.loadPhysicsBarrier(world, right_player_barrier);
-PlatformLoader.loadPhysicsBarrier(world, right_opponent_barrier);
+PlatformLoader.loadPhysicsBarrier(world, vLeftBarrier);
+PlatformLoader.loadPhysicsBarrier(world, vRightBarrier);
+PlatformLoader.loadPhysicsBarrier(world, vLeftPlayerBarrier);
+PlatformLoader.loadPhysicsBarrier(world, vLeftOpponentBarrier);
+PlatformLoader.loadPhysicsBarrier(world, vRightPlayerBarrier);
+PlatformLoader.loadPhysicsBarrier(world, vRightOpponentBarrier);
 
-const playerControllerShape = new CANNON.Box(new CANNON.Vec3(player_controller.geometry.parameters.width / 2, player_controller.geometry.parameters.height / 2, player_controller.geometry.parameters.depth / 2));
-const playerControllerBody = new CANNON.Body({
-  shape: playerControllerShape,
+const vPlayerPaddleShape = new CANNON.Box(new CANNON.Vec3(vPlayerPaddle.geometry.parameters.width / 2, vPlayerPaddle.geometry.parameters.height / 2, vPlayerPaddle.geometry.parameters.depth / 2));
+const pPlayerPaddle = new CANNON.Body({
+  shape: vPlayerPaddleShape,
   mass: 5,
   type: CANNON.Body.DYNAMIC,
   position: new CANNON.Vec3(
     0,
-    player_controller.geometry.parameters.height / 2 + 0.05,
-    v_base.geometry.parameters.height / 2 ),
+    vPlayerPaddle.geometry.parameters.height / 2 + 0.05,
+    vBase.geometry.parameters.height / 2 ),
 });
 
-playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+pPlayerPaddle.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
 let targetPosition = new CANNON.Vec3();
-const delta = new CANNON.Vec3().copy(targetPosition).vsub(playerControllerBody.position);
-playerControllerBody.velocity.set(delta.x * 10, 0, delta.z * 10);
-playerControllerBody.angularFactor.set(0, 0, 0); 
-playerControllerBody.angularVelocity.set(0, 0, 0); 
-playerControllerBody.linearFactor.set(1, 0, 1); 
-world.addBody(playerControllerBody);
+const delta = new CANNON.Vec3().copy(targetPosition).vsub(pPlayerPaddle.position);
+pPlayerPaddle.velocity.set(delta.x * 10, 0, delta.z * 10);
+pPlayerPaddle.angularFactor.set(0, 0, 0); 
+pPlayerPaddle.angularVelocity.set(0, 0, 0); 
+pPlayerPaddle.linearFactor.set(1, 0, 1); 
+world.addBody(pPlayerPaddle);
 
 // Add contact material to enable friction
-const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
+const pContactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
   friction: 0.1,       // moderate surface friction
   restitution: 0.5     // bounciness
 });
-world.addContactMaterial(contactMat);
+world.addContactMaterial(pContactMat);
 
 // user inputs
 
@@ -115,10 +123,10 @@ function onMouseDown(event) {
   updateMouse(event);
   raycaster.setFromCamera(mouse, camera);
 
-  const intersects = raycaster.intersectObject(player_controller);
+  const intersects = raycaster.intersectObject(vPlayerPaddle);
   if (intersects.length > 0) {
     isDragging = true;
-    dragOffset.copy(intersects[0].point).sub(player_controller.position);
+    dragOffset.copy(intersects[0].point).sub(vPlayerPaddle.position);
   }
 }
 function onMouseMove(event) {
@@ -127,13 +135,13 @@ function onMouseMove(event) {
   updateMouse(event);
   raycaster.setFromCamera(mouse, camera);
 
-  const planeY = player_controller.position.y;
+  const planeY = vPlayerPaddle.position.y;
   const platformPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
   const intersection = new THREE.Vector3();
 
   if (raycaster.ray.intersectPlane(platformPlane, intersection)) {
     intersection.sub(dragOffset);
-    targetPosition.set(intersection.x, player_controller.position.y, intersection.z);
+    targetPosition.set(intersection.x, vPlayerPaddle.position.y, intersection.z);
   }
 }
 
@@ -141,18 +149,27 @@ function onMouseUp() {
   isDragging = false;
 }
 
+function resetBall(pBall, vBall) {
+  pBall.position.set(0, 5, 0); // drop it from a height to fall naturally
+  pBall.velocity.set(0, 0, 0);
+  pBall.angularVelocity.set(0, 0, 0);
+  // Also update visual mesh
+  vBall.position.copy(pBall.position);
+  vBall.quaternion.copy(pBall.quaternion);
+}
+
 // Animate
 const fixedTimeStep = 1 / 60;
 function clampBodyPositionToPlatform(body, halfSizeX, halfSizeZ) {
-  const platformWidth = v_base.geometry.parameters.width;
-  const platformDepth = v_base.geometry.parameters.height;
+  const platformWidth = vBase.geometry.parameters.width;
+  const platformDepth = vBase.geometry.parameters.height;
 
   const limitX = platformWidth / 2 - halfSizeX;
   const limitZ = platformDepth / 2 - halfSizeZ;
 
   body.position.x = Math.max(-limitX, Math.min(limitX, body.position.x));
-  if (body.position.x > left_player_barrier.position.x + left_player_barrier.geometry.parameters.width / 2
-    && body.position.x < right_player_barrier.position.x - right_player_barrier.geometry.parameters.width / 2) {
+  if (body.position.x > vLeftPlayerBarrier.position.x + vLeftPlayerBarrier.geometry.parameters.width / 2
+    && body.position.x < vRightPlayerBarrier.position.x - vRightPlayerBarrier.geometry.parameters.width / 2) {
     return
   } else {
     body.position.z = Math.max(-limitZ, Math.min(limitZ, body.position.z));
@@ -163,25 +180,29 @@ function animate() {
 
   // Step the physics world
   world.step(fixedTimeStep);
-
-  if (isDragging) {
-    const delta = new CANNON.Vec3().copy(targetPosition).vsub(playerControllerBody.position);
-    playerControllerBody.velocity.set(delta.x * 10, 0, delta.z * 10);
-  } else {
-    playerControllerBody.velocity.set(0, 0, 0);
+  
+  if (pBall.position.y < -3) {
+    resetBall(pBall, vBall)
   }
-  clampBodyPositionToPlatform(playerControllerBody, 0.5, 0.25); // controller half size: width=1, depth=0.5
-  clampBodyPositionToPlatform(ballBody, 0.25, 0.25); 
+  
+  if (isDragging) {
+    const delta = new CANNON.Vec3().copy(targetPosition).vsub(pPlayerPaddle.position);
+    pPlayerPaddle.velocity.set(delta.x * 10, 0, delta.z * 10);
+  } else {
+    pPlayerPaddle.velocity.set(0, 0, 0);
+  }
+  clampBodyPositionToPlatform(pPlayerPaddle, 0.5, 0.25); // controller half size: width=1, depth=0.5
+  clampBodyPositionToPlatform(pBall, 0.25, 0.25); 
   // Sync ball mesh with physics body
-  ballMesh.position.copy(ballBody.position);
-  ballMesh.quaternion.copy(ballBody.quaternion);
+  vBall.position.copy(pBall.position);
+  vBall.quaternion.copy(pBall.quaternion);
 
-  player_controller.position.copy(playerControllerBody.position);
-  player_controller.quaternion.copy(playerControllerBody.quaternion);
-  // ServerCalls.updatePlayerPosition(player_controller.position);
+  vPlayerPaddle.position.copy(pPlayerPaddle.position);
+  vPlayerPaddle.quaternion.copy(pPlayerPaddle.quaternion);
+  // ServerCalls.updatePlayerPosition(vPlayerPaddle.position);
 
 
-  // ServerCalls.onPlayerPositionUpdate(player_controller.position.set.bind(player_controller.position));
+  // ServerCalls.onPlayerPositionUpdate(vPlayerPaddle.position.set.bind(vPlayerPaddle.position));
 
   cannonDebugger.update(); 
 
