@@ -1,0 +1,170 @@
+import * as THREE from 'https://esm.sh/three';
+import * as CANNON from 'https://esm.sh/cannon-es';
+import CannonDebugger from 'https://esm.sh/cannon-es-debugger';
+
+// Scene, Camera, Renderer
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  75, window.innerWidth / window.innerHeight, 0.1, 1000
+);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// physics world
+const world = new CANNON.World({
+  gravity: new CANNON.Vec3(0, -9.82, 0)
+});
+const groundBody = new CANNON.Body({
+  shape: new CANNON.Box(new CANNON.Vec3(7 / 2, 12 / 2, 0.5 / 2)), // half extents
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(0, 0, 0),
+});
+groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Lay it flat
+world.addBody(groundBody);
+
+const cannonDebugger = CannonDebugger(scene, world);
+
+// Geometry + Material (responsive to light)
+const width = 7;
+const height = 12;
+const depth = 0.5;
+const geometry = new THREE.BoxGeometry(width, height, depth);
+const material = new THREE.MeshStandardMaterial({ color: 0x0000FF });
+// platform
+const base = new THREE.Mesh(geometry, material);
+base.rotation.x = -Math.PI / 2;
+base.position.copy(groundBody.position);
+base.quaternion.copy(groundBody.quaternion);
+scene.add(base);
+
+// right barrier
+const boxHeight = 0.25; // How tall the box is
+const right_barrier = new THREE.Mesh(
+  new THREE.BoxGeometry(0.1, height, boxHeight),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+
+scene.add(right_barrier);
+
+base.add(right_barrier); // Glue box to rectangle
+right_barrier.position.set(base.geometry.parameters.width / 2 - right_barrier.geometry.parameters.width / 2, 0, base.geometry.parameters.depth / 2 + right_barrier.geometry.parameters.depth / 2);
+
+// left barrier
+const left_barrier = new THREE.Mesh(
+  new THREE.BoxGeometry(0.1, height, boxHeight),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+
+scene.add(left_barrier);
+
+base.add(left_barrier); // Glue box to rectangle
+left_barrier.position.set(- base.geometry.parameters.width / 2 + left_barrier.geometry.parameters.width / 2, 0, base.geometry.parameters.depth / 2 + left_barrier.geometry.parameters.depth / 2);
+
+
+// player_barrier
+const player_barrier = new THREE.Mesh(
+  new THREE.BoxGeometry(width, 0.1, boxHeight),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+
+scene.add(player_barrier);
+
+base.add(player_barrier); // Glue box to rectangle
+player_barrier.position.set(0, - base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2, base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
+
+// opponent_barrier
+const opponent_barrier = new THREE.Mesh(
+  new THREE.BoxGeometry(width, 0.1, boxHeight),
+  new THREE.MeshStandardMaterial({ color: 0xff0000 })
+);
+
+scene.add(opponent_barrier);
+
+base.add(opponent_barrier); // Glue box to rectangle
+opponent_barrier.position.set(0, base.geometry.parameters.height / 2 - opponent_barrier.geometry.parameters.height / 2, base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2);
+
+const ballRadius = 0.25;
+const ballBody = new CANNON.Body({
+  mass: 1, // dynamic
+  shape: new CANNON.Sphere(ballRadius),
+  position: new CANNON.Vec3(0, 5, 0), // start high
+  material: new CANNON.Material()
+});
+world.addBody(ballBody);
+
+const ballMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(ballRadius, 8, 8),
+  new THREE.MeshStandardMaterial({ color: 0x00ff00 })
+);
+scene.add(ballMesh);
+
+
+// Add lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // soft light everywhere
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+directionalLight.position.set(5, 10, 7); // from above/front
+scene.add(directionalLight);
+
+// Camera
+camera.position.set(0, 4, 10);
+camera.lookAt(base.position);
+
+// Resize handler
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  camera.lookAt(base.position);
+});
+
+// friction
+const platformMat = new CANNON.Material();
+const ballMat = new CANNON.Material();
+
+groundBody.material = platformMat;
+ballBody.material = ballMat;
+
+// physics shit
+const leftBarrierShape = new CANNON.Box(new CANNON.Vec3(0.1 / 2, 1 / 2, 12 / 2));
+const leftBarrierBody = new CANNON.Body({
+  shape: leftBarrierShape,
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(
+    -base.geometry.parameters.width / 2,
+    0,
+    0
+  ),
+});
+world.addBody(leftBarrierBody);
+
+// Add contact material to enable friction
+const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
+  friction: 0.4,       // moderate surface friction
+  restitution: 0.5     // bounciness
+});
+world.addContactMaterial(contactMat);
+
+// Animate
+const fixedTimeStep = 1 / 60;
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  // Step the physics world
+  world.step(fixedTimeStep);
+
+  // Sync ball mesh with physics body
+  ballMesh.position.copy(ballBody.position);
+  ballMesh.quaternion.copy(ballBody.quaternion);
+
+  cannonDebugger.update(); 
+
+  renderer.render(scene, camera);
+}
+animate();
+setTimeout(() => {
+  ballBody.velocity.set(-5, 0, 0); // roll along +X
+}, 5000);
