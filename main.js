@@ -5,10 +5,13 @@ import CannonDebugger from 'https://esm.sh/cannon-es-debugger';
 import * as Lighting from './Lighting/lighting_helper.js';
 import * as Camera from './Camera/camera-helper.js';
 import * as DayTheme from './Themes/day.js';
-import * as SkyboxLoader from './Loaders/load_skybox.js';
-import * as PlatformLoader from './Loaders/load_platform.js';
-import * as BallLoader from './Loaders/load_ball.js';
-import * as ServerCalls from './Server/server_calls.js'
+import * as SkyboxLoader from './Visuals/v_load_skybox.js';
+import * as PlatformLoader from './Visuals/v_load_platform.js';
+import * as PhysicsLoader from './Physics/p_load_platform.js'
+import * as BallPhysicsLoader from './Physics/p_load_ball.js'
+import * as BarrierPhysicsLoader from './Physics/p_load_borders.js'
+
+import * as BallLoader from './Visuals/v_load_ball.js';
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -65,19 +68,19 @@ const world = new CANNON.World({
 
 const cannonDebugger = CannonDebugger(scene, world);
 
-const pBall = BallLoader.loadPhysicsBall(world, 0.25); // Load physics ball with radius 0.25
-const pGroundBody = PlatformLoader.loadPhysicsPlatform(world, vBase, 10, 0.5, 15); // Load physics platform with specified dimensions
+const pBall = BallPhysicsLoader.loadPhysicsBall(world, 0.25); // Load physics ball with radius 0.25
+const pGroundBody = PhysicsLoader.loadPhysicsPlatform(world, vBase, 10, 0.5, 15); // Load physics platform with specified dimensions
 
 // friction
 const platformMat = new CANNON.Material();
 const ballMat = new CANNON.Material();
 
-PlatformLoader.loadPhysicsBarrier(world, vLeftBarrier);
-PlatformLoader.loadPhysicsBarrier(world, vRightBarrier);
-PlatformLoader.loadPhysicsBarrier(world, vLeftPlayerBarrier);
-PlatformLoader.loadPhysicsBarrier(world, vLeftOpponentBarrier);
-PlatformLoader.loadPhysicsBarrier(world, vRightPlayerBarrier);
-PlatformLoader.loadPhysicsBarrier(world, vRightOpponentBarrier);
+BarrierPhysicsLoader.loadPhysicsBarrier(world, vLeftBarrier);
+BarrierPhysicsLoader.loadPhysicsBarrier(world, vRightBarrier);
+BarrierPhysicsLoader.loadPhysicsBarrier(world, vLeftPlayerBarrier);
+BarrierPhysicsLoader.loadPhysicsBarrier(world, vLeftOpponentBarrier);
+BarrierPhysicsLoader.loadPhysicsBarrier(world, vRightPlayerBarrier);
+BarrierPhysicsLoader.loadPhysicsBarrier(world, vRightOpponentBarrier);
 
 const vPlayerPaddleShape = new CANNON.Box(new CANNON.Vec3(vPlayerPaddle.geometry.parameters.width / 2, vPlayerPaddle.geometry.parameters.height / 2, vPlayerPaddle.geometry.parameters.depth / 2));
 const pPlayerPaddle = new CANNON.Body({

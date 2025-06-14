@@ -1,6 +1,5 @@
 import * as THREE from 'https://esm.sh/three';
-import * as Barrier from './load_borders.js';
-import * as CANNON from 'https://esm.sh/cannon-es';
+import * as Barrier from './v_load_borders.js';
 
 export function loadPlatform(scene, width = 7, height = 0.5, depth = 12, borderWidth = 0.1, borderHeight = 0.5) {
 
@@ -62,30 +61,3 @@ export function loadPlatform(scene, width = 7, height = 0.5, depth = 12, borderW
     };
 }
 
-export function loadPhysicsPlatform(world, vBase, width = 7, height = 0.5, depth = 12){
-    const pGroundBody = new CANNON.Body({
-      shape: new CANNON.Box(new CANNON.Vec3(width / 2, depth / 2, height / 2)), // half extents
-      type: CANNON.Body.STATIC,
-      position: new CANNON.Vec3(0, 0, 0),
-    });
-    pGroundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); // Lay it flat
-    world.addBody(pGroundBody);
-    
-    vBase.quaternion.copy(pGroundBody.quaternion);
-    vBase.position.copy(pGroundBody.position);
-    vBase.quaternion.copy(pGroundBody.quaternion);
-
-    return pGroundBody;
-}
-
-export function loadPhysicsBarrier(world, v_barrier) {
-    const pBarrierBody = new CANNON.Body({
-        shape: new CANNON.Box(new CANNON.Vec3(v_barrier.geometry.parameters.width / 2, v_barrier.geometry.parameters.height / 2, v_barrier.geometry.parameters.depth / 2)), // half extents
-        type: CANNON.Body.STATIC,
-        position: new CANNON.Vec3(v_barrier.position.x, v_barrier.position.z, v_barrier.position.y), // Adjust position to match the barrier
-    });
-    pBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
-    world.addBody(pBarrierBody);
-
-    return pBarrierBody;
-}
