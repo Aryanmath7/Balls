@@ -6,7 +6,7 @@ import * as Lighting from './Lighting/lighting_helper.js';
 import * as Camera from './Camera/camera-helper.js';
 import * as DayTheme from './Themes/day.js';
 import * as SkyboxLoader from './Loaders/load_skybox.js';
-import * as Barrier from './Loaders/borders.js';
+import * as PlatformLoader from './Loaders/load_platform.js';
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
@@ -25,36 +25,9 @@ let isDragging = false;
 let dragOffset = new THREE.Vector3();
 
 // visuals
-// Geometry + Material (responsive to light)
-const geometry = new THREE.BoxGeometry(7, 12, 0.5);
-const material = new THREE.MeshStandardMaterial({ color: 0x0000FF });
+
 // platform
-
-const v_base = new THREE.Mesh(geometry, material);
-v_base.castShadow = true; // Cast shadows
-v_base.receiveShadow = true; // Receive shadows
-scene.add(v_base);
-
-// right barrier
-const border_height = 0.4;
-const v_right_barrier = Barrier.initBorder(scene, 0.1, v_base.geometry.parameters.height, border_height)
-v_base.add(v_right_barrier);
-v_right_barrier.position.set(v_base.geometry.parameters.width / 2 - v_right_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + v_right_barrier.geometry.parameters.depth / 2);
-
-// left barrier
-const v_left_barrier = Barrier.initBorder(scene, 0.1, v_base.geometry.parameters.height, border_height)
-v_base.add(v_left_barrier);
-v_left_barrier.position.set(- v_base.geometry.parameters.width / 2 + v_left_barrier.geometry.parameters.width / 2, 0, v_base.geometry.parameters.depth / 2 + v_left_barrier.geometry.parameters.depth / 2);
-
-// player_barrier
-const player_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width, 0.1, border_height)
-v_base.add(player_barrier); // Glue box to rectangle
-player_barrier.position.set(0, - v_base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
-
-// opponent_barrier
-const opponent_barrier = Barrier.initBorder(scene, v_base.geometry.parameters.width, 0.1, border_height)
-v_base.add(opponent_barrier); // Glue box to rectangle
-opponent_barrier.position.set(0, v_base.geometry.parameters.height / 2 - opponent_barrier.geometry.parameters.height / 2, v_base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2);
+const { base: v_base, rightBarrier: v_right_barrier, leftBarrier: v_left_barrier, playerBarrier: player_barrier, opponentBarrier: opponent_barrier } = PlatformLoader.loadPlatform(scene, 7, 0.5, 12); // Load platform with specified dimensions
 
 const ballRadius = 0.25;
 const ballMesh = new THREE.Mesh(
