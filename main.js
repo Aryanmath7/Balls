@@ -14,6 +14,7 @@ SkyboxLoader.addSkyboxBackground(scene, DayTheme.LIGHT_SKYBOX_PATH); // Load sky
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // Mouse Control Initialization
@@ -72,6 +73,8 @@ const material = new THREE.MeshStandardMaterial({ color: 0x0000FF });
 const base = new THREE.Mesh(geometry, material);
 base.position.copy(groundBody.position);
 base.quaternion.copy(groundBody.quaternion);
+base.castShadow = true; // Cast shadows
+base.receiveShadow = true; // Receive shadows
 scene.add(base);
 
 // right barrier
@@ -132,6 +135,8 @@ const ballMesh = new THREE.Mesh(
   new THREE.SphereGeometry(ballRadius, 8, 8),
   new THREE.MeshStandardMaterial({ color: 0x00ff00 })
 );
+ballMesh.castShadow = true; // Cast shadows
+ballMesh.receiveShadow = true; // Receive shadows
 scene.add(ballMesh);
 
 const player_controller = new THREE.Mesh(
@@ -139,6 +144,8 @@ const player_controller = new THREE.Mesh(
   new THREE.MeshStandardMaterial({ color: 0xff0000 })
 );
 
+player_controller.castShadow = true; // Cast shadows
+player_controller.receiveShadow = true; // Receive shadows
 scene.add(player_controller);
 
 player_controller.position.set(0, - base.geometry.parameters.height / 2 + player_barrier.geometry.parameters.height / 2 + player_controller.geometry.parameters.height + 0.1, base.geometry.parameters.depth / 2 + player_barrier.geometry.parameters.depth / 2);
@@ -291,8 +298,8 @@ function animate() {
   player_controller.position.copy(playerControllerBody.position);
   player_controller.quaternion.copy(playerControllerBody.quaternion);
 
-  cannonDebugger.update(); 
-  
+  //cannonDebugger.update(); 
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
 }
