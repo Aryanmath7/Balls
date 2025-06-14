@@ -163,7 +163,7 @@ function animate() {
   ServerCalls.updatePlayerPosition(player_controller.position);
 
 
-  ServerCalls.onPlayerPositionUpdate(player_controller.position.set);
+  ServerCalls.onPlayerPositionUpdate(player_controller.position.set.bind(player_controller.position));
 
   cannonDebugger.update(); 
 
