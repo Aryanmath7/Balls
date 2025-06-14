@@ -16,7 +16,7 @@ export function updatePlayerPosition(position) {
 }
 
 export function onPlayerPositionUpdate(callback) {
-    socket.on('player position', (position) => {
+    socket.on('updatePlayerPosition', (position) => {
         console.log('Updated player position:', position);
         callback(position);
     });
