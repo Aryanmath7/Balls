@@ -81,7 +81,6 @@ const opponent_barrier = new THREE.Mesh(
 );
 
 scene.add(opponent_barrier);
-
 base.add(opponent_barrier); // Glue box to rectangle
 opponent_barrier.position.set(0, base.geometry.parameters.height / 2 - opponent_barrier.geometry.parameters.height / 2, base.geometry.parameters.depth / 2 + opponent_barrier.geometry.parameters.depth / 2);
 
@@ -175,6 +174,19 @@ const opponentBarrierBody = new CANNON.Body({
 opponentBarrierBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
 world.addBody(opponentBarrierBody);
 
+const playerControllerShape = new CANNON.Box(new CANNON.Vec3(player_controller.geometry.parameters.width / 2, player_controller.geometry.parameters.height / 2, player_controller.geometry.parameters.depth / 2));
+const playerControllerBody = new CANNON.Body({
+  shape: playerControllerShape,
+  type: CANNON.Body.STATIC,
+  position: new CANNON.Vec3(
+    0,
+    base.geometry.parameters.depth / 2 + player_controller.geometry.parameters.depth / 2,
+    base.geometry.parameters.height / 2 - player_controller.geometry.parameters.height / 2 - 0.5
+  ),
+});
+playerControllerBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0); 
+world.addBody(playerControllerBody);
+
 // Add contact material to enable friction
 const contactMat = new CANNON.ContactMaterial(platformMat, ballMat, {
   friction: 0.4,       // moderate surface friction
@@ -194,6 +206,9 @@ function animate() {
   // Sync ball mesh with physics body
   ballMesh.position.copy(ballBody.position);
   ballMesh.quaternion.copy(ballBody.quaternion);
+
+  player_controller.position.copy(playerControllerBody.position);
+  player_controller.quaternion.copy(playerControllerBody.quaternion);
 
   cannonDebugger.update(); 
 
