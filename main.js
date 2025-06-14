@@ -139,7 +139,7 @@ function onMouseUp() {
 }
 
 // Animate
-const fixedTimeStep = 1 / 30;
+const fixedTimeStep = 1 / 15;
 
 function animate() {
   requestAnimationFrame(animate);
@@ -162,9 +162,7 @@ function animate() {
   player_controller.quaternion.copy(playerControllerBody.quaternion);
   ServerCalls.updatePlayerPosition(player_controller.position);
 
-
-  ServerCalls.onPlayerPositionUpdate(player_controller.position.set.bind(player_controller.position));
-
+  ServerCalls.onPlayerPositionUpdate(position => player_controller.position.set(position.x, position.y, position.z));
   cannonDebugger.update(); 
 
   renderer.setSize(window.innerWidth, window.innerHeight);
