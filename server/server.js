@@ -1,25 +1,27 @@
-import { WebSocketServer } from 'ws';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 
-const PORT = process.env.PORT || 3000;
-const wss = new WebSocketServer({ port: PORT });
+const httpServer = createServer();
 
-wss.on('connection', (ws) => {
-  console.log('✅ New client connected');
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*", // allow all origins for testing, tighten for production!
+  }
+});
 
-  ws.on('message', (message) => {
-    console.log(`📩 Received: ${message}`);
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
 
-    // Broadcast to all connected clients
-    wss.clients.forEach((client) => {
-      if (client.readyState === ws.OPEN) {
-        client.send(`Server echoes: ${message}`);
-      }
-    });
+  socket.on('chat message', (msg) => {
+    console.log('Message received:', msg);
+    io.emit('chat message', msg); // broadcast to all clients
   });
 
-  ws.on('close', () => {
-    console.log('❌ Client disconnected');
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
   });
 });
 
-console.log(`🚀 WebSocket server running at ws://localhost:${PORT}`);
+httpServer.listen(3000, () => {
+  console.log('Socket.IO server running at http://localhost:3000/');
+});
