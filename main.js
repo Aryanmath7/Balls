@@ -80,7 +80,7 @@ opponent_barrier.position.set(0, v_base.geometry.parameters.height / 2 - opponen
 
 const ballRadius = 0.25;
 const ballMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(ballRadius, 8, 8),
+  new THREE.SphereGeometry(ballRadius, 64, 64),
   new THREE.MeshStandardMaterial({ color: 0x00ff00 })
 );
 ballMesh.castShadow = true; // Cast shadows
