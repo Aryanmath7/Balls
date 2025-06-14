@@ -5,10 +5,12 @@ import CannonDebugger from 'https://esm.sh/cannon-es-debugger';
 import * as Lighting from './Lighting/lighting_helper.js';
 import * as Camera from './Camera/camera-helper.js';
 import * as DayTheme from './Themes/day.js';
+import * as SkyboxLoader from './Loaders/load_skybox.js';
 
 // Scene, Camera, Renderer
 const scene = new THREE.Scene();
 const camera = Camera.initMainCamera(scene); // Initialize camera with target scene
+SkyboxLoader.addSkyboxBackground(scene, DayTheme.LIGHT_SKYBOX_PATH); // Load skybox background
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
