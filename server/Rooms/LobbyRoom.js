@@ -1,11 +1,32 @@
 import { Room } from "colyseus";
 
+import * as CANNON from "cannon-es";
+import CannonDebugger from "cannon-es-debugger";
+
+import * as BallPhysics from '../Physics/p_load_ball.js';
+import * as PlatformPhysics from '../Physics/p_load_platform.js';
+
 export class LobbyRoom extends Room {
   onCreate(options) {
     console.log("LobbyRoom created!");
 
+    // 1. Create a physics world
+    this.world = new CANNON.World();
+    this.world.gravity.set(0, -9.82, 0);
+
+    // 2. Instantiate physics bodies
+    this.pBall = BallPhysics.loadPhysicsBall(this.world, 1); // radius = 1
+
+    // vBase is a simple object with position and quaternion for platform
+    const vBase = { 
+      position: new CANNON.Vec3(), 
+      quaternion: new CANNON.Quaternion() 
+    };
+    this.platformBody = PlatformPhysics.loadPhysicsPlatform(this.world, vBase, 7, 0.5, 12);
+
     // Store connected players (keyed by sessionId)
     this.connectedPlayers = {};
+    this.ballPosition = { x: 0, y: 0, z: 0 };
 
     // Handle "move" requests from clients
     this.onMessage("move", (client, data) => {
@@ -14,23 +35,27 @@ export class LobbyRoom extends Room {
         console.warn(`Move received for unknown client ${client.sessionId}`);
         return;
       }
+      console.log(`Player ${client.sessionId} moved to x:${data.x}, y:${data.y}, z:${data.z}`);
 
-      // Update position
-      player.x_pos = data.x;
-      player.y_pos = data.y;
-      player.z_pos = data.z;
-
-      console.log(
-        `Player ${client.sessionId} moved to x:${data.x}, y:${data.y}, z:${data.z}`
-      );
-
-      // Optionally: broadcast updated position to other clients
+      //Broadcast updated position to other clients
       this.broadcast("player_moved", {
         id: client.sessionId,
         x: data.x,
         y: data.y,
         z: data.z
       });
+    });
+
+    // 3. Step the physics world at a fixed interval
+    this.setSimulationInterval((deltaTime) => {
+      this.world.step(1/60);
+      // Optionally, broadcast ball position to clients
+      this.broadcast("update_ball_position", {
+        x: this.pBall.position.x,
+        y: this.pBall.position.y,
+        z: this.pBall.position.z
+      });
+      console.log(`Ball position: x:${this.pBall.position.x}, y:${this.pBall.position.y}, z:${this.pBall.position.z}`);
     });
 
   }

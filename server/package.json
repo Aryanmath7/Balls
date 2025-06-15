@@ -8,6 +8,8 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "cannon-es": "^0.20.0",
+    "cannon-es-debugger": "^1.0.0",
     "colyseus": "^0.16.4",
     "colyseus.js": "^0.16.19"
   }

@@ -44,3 +44,8 @@ let onPlayerMovedCallback = null;
 export function onPlayerMoved(callback) {
   onPlayerMovedCallback = callback;
 }
+
+export function onMessage(type, callback) {
+  if (!room) return;
+  room.onMessage(type, callback);
+}

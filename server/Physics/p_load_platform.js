@@ -1,4 +1,6 @@
-import * as CANNON from 'https://esm.sh/cannon-es';
+import * as CANNON from "../node_modules/cannon-es/dist/cannon-es.cjs.js";
+import CannonDebugger from "../node_modules/cannon-es-debugger/dist/cannon-es-debugger.cjs.js";
+
 
 export function loadPhysicsPlatform(world, vBase, width = 7, height = 0.5, depth = 12){
     const pGroundBody = new CANNON.Body({

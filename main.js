@@ -94,7 +94,7 @@ const world = new CANNON.World({
 
 const cannonDebugger = CannonDebugger(scene, world);
 
-const pBall = BallPhysicsLoader.loadPhysicsBall(world, 0.25); // Load physics ball with radius 0.25
+//const pBall = BallPhysicsLoader.loadPhysicsBall(world, 0.25); // Load physics ball with radius 0.25
 const pGroundBody = PhysicsLoader.loadPhysicsPlatform(world, vBase, 10, 0.5, 15); // Load physics platform with specified dimensions
 
 // friction
@@ -157,12 +157,12 @@ function clampBodyPositionToPlatform(body, halfSizeX, halfSizeZ) {
 function animate() {
   requestAnimationFrame(animate);
 
-  // Step the physics world
-  world.step(fixedTimeStep);
+  // // Step the physics world
+   world.step(fixedTimeStep);
   
-  if (pBall.position.y < -3) {
-    Utils.resetBall(pBall, vBall)
-  }
+  // if (pBall.position.y < -3) {
+  //   Utils.resetBall(pBall, vBall)
+  // }
   
   if (Controls.isDragging) {
     const delta = new CANNON.Vec3().copy(Controls.targetPosition).vsub(pPlayerPaddle.position);
@@ -183,11 +183,16 @@ function animate() {
     }
   });
 
+  Client.onMessage("update_ball_position", (message) => {
+    // Update ball position based on server message
+    vBall.position.set(message.x, message.y, message.z);
+  });
+
   clampBodyPositionToPlatform(pPlayerPaddle, 0.5, 0.25); // controller half size: width=1, depth=0.5
-  clampBodyPositionToPlatform(pBall, 0.25, 0.25); 
+  // clampBodyPositionToPlatform(pBall, 0.25, 0.25); 
   // Sync ball mesh with physics body
-  vBall.position.copy(pBall.position);
-  vBall.quaternion.copy(pBall.quaternion);
+  // vBall.position.copy(pBall.position);
+  // vBall.quaternion.copy(pBall.quaternion);
 
   vPlayerPaddle.position.copy(pPlayerPaddle.position);
   vPlayerPaddle.quaternion.copy(pPlayerPaddle.quaternion);
