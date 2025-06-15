@@ -91,12 +91,6 @@ const fixedTimeStep = 1 / 60;
 function animate() {
   requestAnimationFrame(animate);
 
-  // // Step the physics world
-   world.step(fixedTimeStep);
-  
-  // if (pBall.position.y < -3) {
-  //   Utils.resetBall(pBall, vBall)
-  // }
   
   if (Controls.isDragging) {
     const delta = new CANNON.Vec3().copy(Controls.targetPosition).vsub(pPlayerPaddle.position);
@@ -121,17 +115,6 @@ function animate() {
     // Update ball position based on server message
     vBall.position.set(message.x, message.y, message.z);
   });
-
-  //clampBodyPositionToPlatform(pPlayerPaddle, 0.5, 0.25); // controller half size: width=1, depth=0.5
-  // clampBodyPositionToPlatform(pBall, 0.25, 0.25); 
-  // Sync ball mesh with physics body
-  // vBall.position.copy(pBall.position);
-  // vBall.quaternion.copy(pBall.quaternion);
-
-  //vPlayerPaddle.position.copy(pPlayerPaddle.position);
-  //vPlayerPaddle.quaternion.copy(pPlayerPaddle.quaternion);
-
-  cannonDebugger.update(); 
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
