@@ -49,7 +49,6 @@ document.body.appendChild(renderer.domElement);
 //#region Physics Callbacks
 
 Client.onPlayerMoved((message) => {
-  console.log(room);
   if (message.id == room.sessionId) {
     return;
   }
@@ -94,6 +93,7 @@ const vPlayerPaddle = new THREE.Mesh(
 
 vPlayerPaddle.position.set(0, vBase.geometry.parameters.depth, 0 + vBase.geometry.parameters.width / 2);
 vPlayerPaddle.rotation.x = -Math.PI / 2;
+Controls.initMouseControls(renderer, camera, vPlayerPaddle)
 
 vPlayerPaddle.castShadow = true; // Cast shadows
 vPlayerPaddle.receiveShadow = true; // Receive shadows
@@ -126,12 +126,16 @@ const fixedTimeStep = 1 / 60;
 function animate() {
   requestAnimationFrame(animate);
 
+  // Move paddle visually if dragging
   if (Controls.isDragging) {
-    const delta = new CANNON.Vec3().copy(Controls.targetPosition).vsub(pPlayerPaddle.position);
-    //pPlayerPaddle.velocity.set(delta.x * 10, 0, delta.z * 10);
-    Client.sendPlayerMove(pPlayerPaddle.position);
-  } else {
-    //pPlayerPaddle.velocity.set(0, 0, 0);
+    vPlayerPaddle.position.set(
+      Controls.targetPosition.x,
+      Controls.targetPosition.y,
+      Controls.targetPosition.z
+    );
+
+    // Send updated position to server
+    Client.sendPlayerMove(vPlayerPaddle.position);
   }
 
   renderer.setSize(window.innerWidth, window.innerHeight);
