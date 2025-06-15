@@ -22,6 +22,7 @@ export class LobbyRoom extends Room {
       position: new CANNON.Vec3(), 
       quaternion: new CANNON.Quaternion() 
     };
+
     this.platformBody = PlatformPhysics.loadPhysicsPlatform(this.world, vBase, 7, 0.5, 12);
 
     // Store connected players (keyed by sessionId)
@@ -46,17 +47,19 @@ export class LobbyRoom extends Room {
       });
     });
 
-    // 3. Step the physics world at a fixed interval
-    this.setSimulationInterval((deltaTime) => {
-      this.world.step(1/60);
+
+    // Step the physics world and broadcast ball position 30 times per second
+    this.setSimulationInterval(() => {
+      this.world.step(1 / 60);
       // Optionally, broadcast ball position to clients
       this.broadcast("update_ball_position", {
-        x: this.pBall.position.x,
-        y: this.pBall.position.y,
-        z: this.pBall.position.z
+      x: this.pBall.position.x,
+      y: this.pBall.position.y,
+      z: this.pBall.position.z
       });
       console.log(`Ball position: x:${this.pBall.position.x}, y:${this.pBall.position.y}, z:${this.pBall.position.z}`);
-    });
+    }, 1000 / 60);
+
 
   }
 

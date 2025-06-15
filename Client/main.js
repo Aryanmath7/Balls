@@ -1,6 +1,7 @@
 import * as THREE from 'https://esm.sh/three';
 import * as CANNON from 'https://esm.sh/cannon-es';
-import CannonDebugger from 'https://esm.sh/cannon-es-debugger';
+import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
+
 
 import * as Lighting from './Lighting/lighting_helper.js';
 import * as Camera from './Camera/camera-helper.js';
@@ -21,7 +22,7 @@ await Client.connectToServer();
 const room = Client.returnRoom();
 //#endregion
 
-//#region Scene, Camera, Renderer
+//#region Scene, Camera, Renderer, Loader
 const scene = new THREE.Scene();
 const camera = Camera.initMainCamera(scene); // Initialize camera with target scene
 SkyboxLoader.addSkyboxBackground(scene, DayTheme.LIGHT_SKYBOX_PATH); // Load skybox background
@@ -30,6 +31,49 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
+
+//#region Load the arena
+const loader = new GLTFLoader();
+//Load the file
+// loader.load(
+//   `./Models/${objToRender}/scene.gltf`,
+//   function (gltf) {
+//     //If the file is loaded, add it to the scene
+//     object = gltf.scene;
+//     scene.add(object);
+//   },
+//   function (xhr) {
+//     //While it is loading, log the progress
+//     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+//   },
+//   function (error) {
+//     //If there is an error, log it
+//     console.error(error);
+//   }
+// );
+
+//#endregion
+
+//#endregion
+
+//#region Physics Callbacks
+
+Client.onPlayerMoved((message) => {
+  console.log(room);
+  if (message.id == room.sessionId) {
+    return;
+  }
+  else{
+    vOpponentPaddle.position.set(-message.x, message.y , -message.z);
+  }
+});
+
+Client.onMessage("update_ball_position", (message) => {
+  // Update ball position based on server message
+  vBall.position.set(message.x, message.y, message.z);
+});
+
+
 //#endregion
 
 //#region visuals
@@ -43,7 +87,7 @@ const {
         vLeftOpponentBarrier: vLeftOpponentBarrier,
         vRightPlayerBarrier: vRightPlayerBarrier,
         vRightOpponentBarrier: vRightOpponentBarrier
-    } = PlatformLoader.loadPlatform(scene, 10, 0.5, 15); // Load platform with specified dimensions
+    } = PlatformLoader.loadPlatform(scene, 10, 0.5, 15, 0.2, 0.5, 0xFFFFFF, 0xFFFFFF); // Load platform with specified dimensions
 //#endregion
 
 //#region Ball
@@ -82,7 +126,8 @@ scene.add(vOpponentPaddle);
 //#endregion
 
 //#region Light initialization
-Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, DayTheme.LIGHT_DIRECTION);
+//Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, DayTheme.LIGHT_DIRECTION);
+Lighting.initDirectionalLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY, {x: 5, y: 15, z: 70 });
 Lighting.initAmbientLight(scene, DayTheme.LIGHT_COLOR, DayTheme.LIGHT_INTENSITY);
 //#endregion
 
@@ -91,7 +136,6 @@ const fixedTimeStep = 1 / 60;
 function animate() {
   requestAnimationFrame(animate);
 
-  
   if (Controls.isDragging) {
     const delta = new CANNON.Vec3().copy(Controls.targetPosition).vsub(pPlayerPaddle.position);
     //pPlayerPaddle.velocity.set(delta.x * 10, 0, delta.z * 10);
@@ -99,22 +143,6 @@ function animate() {
   } else {
     //pPlayerPaddle.velocity.set(0, 0, 0);
   }
-
-  Client.onPlayerMoved((message) => {
-    console.log(room);
-    // message should contain the opponent's paddle position: { x, y, z }
-    if (message.id == room.sessionId) {
-      return;
-    }
-    else{
-      vOpponentPaddle.position.set(-message.x, message.y , -message.z);
-    }
-  });
-
-  Client.onMessage("update_ball_position", (message) => {
-    // Update ball position based on server message
-    vBall.position.set(message.x, message.y, message.z);
-  });
 
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.render(scene, camera);
