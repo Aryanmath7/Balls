@@ -1,7 +1,5 @@
 import { Room } from "colyseus";
-
 import * as CANNON from "cannon-es";
-import CannonDebugger from "cannon-es-debugger";
 
 import * as BallPhysics from '../Physics/p_load_ball.js';
 import * as PlatformPhysics from '../Physics/p_load_platform.js';
@@ -10,35 +8,52 @@ export class LobbyRoom extends Room {
   onCreate(options) {
     console.log("LobbyRoom created!");
 
-    // 1. Create a physics world
+    // Physics setup
     this.world = new CANNON.World();
     this.world.gravity.set(0, -9.82, 0);
 
-    // 2. Instantiate physics bodies
-    this.pBall = BallPhysics.loadPhysicsBall(this.world, 1); // radius = 1
-
-    // vBase is a simple object with position and quaternion for platform
-    const vBase = { 
-      position: new CANNON.Vec3(), 
-      quaternion: new CANNON.Quaternion() 
+    // Load ball
+    this.pBall = BallPhysics.loadPhysicsBall(this.world, 0.25);
+    
+    // Load platform
+    const vBase = {
+      position: new CANNON.Vec3(0, 0, 0),
+      quaternion: new CANNON.Quaternion()
     };
-
     this.platformBody = PlatformPhysics.loadPhysicsPlatform(this.world, vBase, 7, 0.5, 12);
 
-    // Store connected players (keyed by sessionId)
+    const vPlayerPaddleShape = new CANNON.Box(new CANNON.Vec3(1 / 2, 1/2, 0.5 / 2));
+    this.pPlayerPaddle = new CANNON.Body({
+      shape: vPlayerPaddleShape,
+      mass: 5,
+      type: CANNON.Body.DYNAMIC,
+      position: new CANNON.Vec3(
+        0,
+        1 / 2 + 0.05,
+        0.5 / 2 ),
+    });
+    this.world.addBody(this.pPlayerPaddle);
+    // Player storage
     this.connectedPlayers = {};
-    this.ballPosition = { x: 0, y: 0, z: 0 };
 
-    // Handle "move" requests from clients
+    // Handle movement messages
     this.onMessage("move", (client, data) => {
       const player = this.connectedPlayers[client.sessionId];
       if (!player) {
         console.warn(`Move received for unknown client ${client.sessionId}`);
         return;
       }
-      console.log(`Player ${client.sessionId} moved to x:${data.x}, y:${data.y}, z:${data.z}`);
+      console.log(`Received move from ${client.sessionId}: x=${data.x.toFixed(2)}, y=${data.y.toFixed(2)}, z=${data.z.toFixed(2)}`);
+      // Update server-side position
+      player.x_pos = data.x;
+      player.y_pos = data.y;
+      player.z_pos = data.z;
+      const target = new CANNON.Vec3(data.x, data.y, data.z);
+      const current = this.pPlayerPaddle.position;
+      const diff = target.vsub(current);
+      this.pPlayerPaddle.velocity.set(diff.x * 10, diff.y * 10, diff.z * 10);
 
-      //Broadcast updated position to other clients
+      // Broadcast to all other clients
       this.broadcast("player_moved", {
         id: client.sessionId,
         x: data.x,
@@ -47,37 +62,40 @@ export class LobbyRoom extends Room {
       });
     });
 
-
-    // Step the physics world and broadcast ball position 30 times per second
+    // Physics simulation
     this.setSimulationInterval(() => {
       this.world.step(1 / 60);
-      // Optionally, broadcast ball position to clients
+      const pos = this.pBall.position;
+      console.log(`Ball position: x=${pos.x.toFixed(2)}, y=${pos.y.toFixed(2)}, z=${pos.z.toFixed(2)}`);
+      // Broadcast ball position to clients
       this.broadcast("update_ball_position", {
-      x: this.pBall.position.x,
-      y: this.pBall.position.y,
-      z: this.pBall.position.z
+        x: this.pBall.position.x,
+        y: this.pBall.position.y,
+        z: this.pBall.position.z
       });
-      console.log(`Ball position: x:${this.pBall.position.x}, y:${this.pBall.position.y}, z:${this.pBall.position.z}`);
+
+      // For debugging
     }, 1000 / 60);
-
-
   }
 
   onJoin(client, options) {
     console.log(`Client joined: ${client.sessionId}`);
 
-    // Use the parameters sent from the client (options)
+    // Add to player list
     this.connectedPlayers[client.sessionId] = {
-        sessionId: client.sessionId,
-        x_pos: options.x ?? 1,
-        y_pos: options.y ?? 1,
-        z_pos: options.z ?? 1,
+      sessionId: client.sessionId,
+      x_pos: options.x ?? 1,
+      y_pos: options.y ?? 1,
+      z_pos: options.z ?? 1,
+
+      // Optional: for future paddle physics support
+      // paddleBody: new CANNON.Body({ mass: 0 })
     };
 
-    // Broadcast to everyone
+    // Notify others
     this.broadcast("player_joined", { id: client.sessionId });
 
-    // Optional: send current player list to the newly joined client
+    // Send existing players to the newly joined client
     client.send("current_players", {
       players: Object.values(this.connectedPlayers)
     });
@@ -85,16 +103,11 @@ export class LobbyRoom extends Room {
 
   onLeave(client, consented) {
     console.log(`Client left: ${client.sessionId}`);
-
-    // Remove from connected players
     delete this.connectedPlayers[client.sessionId];
-
-    // Notify others
     this.broadcast("player_left", { id: client.sessionId });
   }
 
   onDispose() {
     console.log("LobbyRoom disposed");
   }
-  
 }
