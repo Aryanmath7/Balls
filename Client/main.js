@@ -1,6 +1,6 @@
 import * as THREE from 'https://esm.sh/three';
 import * as CANNON from 'https://esm.sh/cannon-es';
-import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from 'https://esm.sh/three@0.152.2/examples/jsm/loaders/GLTFLoader.js';
 
 
 import * as Lighting from './Lighting/lighting_helper.js';
@@ -27,30 +27,20 @@ const scene = new THREE.Scene();
 const camera = Camera.initMainCamera(scene); // Initialize camera with target scene
 SkyboxLoader.addSkyboxBackground(scene, DayTheme.LIGHT_SKYBOX_PATH); // Load skybox background
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+//#region Load the arena
+let object;
+const loader = new GLTFLoader();
+//Load the file
+loader.load('./Models/Stadium/scene.gltf', (gltfScene) => {
+  gltfScene.scene.scale.set(12, 12, 12); // Increase scale to make stadium much bigger
+  gltfScene.scene.position.y -= 3; // Move stadium lower on the Y axis
+  scene.add(gltfScene.scene);
+});
+
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
-
-//#region Load the arena
-const loader = new GLTFLoader();
-//Load the file
-// loader.load(
-//   `./Models/${objToRender}/scene.gltf`,
-//   function (gltf) {
-//     //If the file is loaded, add it to the scene
-//     object = gltf.scene;
-//     scene.add(object);
-//   },
-//   function (xhr) {
-//     //While it is loading, log the progress
-//     console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-//   },
-//   function (error) {
-//     //If there is an error, log it
-//     console.error(error);
-//   }
-// );
 
 //#endregion
 
