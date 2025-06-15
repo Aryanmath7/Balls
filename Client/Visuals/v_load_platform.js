@@ -4,6 +4,7 @@ import * as Barrier from './v_load_borders.js';
 export function loadPlatform(scene, width = 7, height = 0.5, depth = 12, borderWidth = 0.1, borderHeight = 0.5) {
 
     const vBase = new THREE.Mesh(new THREE.BoxGeometry(width, depth, height), new THREE.MeshStandardMaterial({ color: 0x0000FF }));
+    vBase.rotation.x = -Math.PI / 2;
     scene.add(vBase);
     vBase.castShadow = true; // Cast shadows
     vBase.receiveShadow = true; // Receive shadows
